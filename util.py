@@ -222,13 +222,23 @@ def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False):
 
 
 def _crosstab_sheet_to_df(
-    sheet, section_var_name="domain", controlling_for_aside_from_dataset=None
+    sheet, section_var_name="domain", controlling_for_aside_from_dataset=None,
+    country_knows_status_year=None
 ):
+    """
+        country_knows_status_year: a triple like (country, knows_status, year) or None
+          if tuple, like ("Burundi", "All", 2011)
+    """
     assert controlling_for_aside_from_dataset in [
         "pregnant",
         None,
     ], "currently can only control for pregnant"
     assert section_var_name == "domain", "TODO: refactor. This is conceptually simpler"
+
+    if country_knows_status_year is None:
+        raise ValueError("not yet implemented")
+
+    country, knows_status, year = country_knows_status_year
     out = []
     v = list(sheet.values)[2:]
 
@@ -255,6 +265,9 @@ def _crosstab_sheet_to_df(
         out.append(pd.Series(rd))
 
     df_out = pd.DataFrame(out).rename(columns={section_var_name: "section"})
+    df_out["country"] = country
+    df_out["year"] = year
+    df_out["knows_status"] = knows_status
     df_out["covariate"] = covariate
     df_out["dataset"] = dataset
     df_out["pregnant_controlling"] = pregnant_controlling
@@ -277,12 +290,12 @@ def _crosstab_df_clean(df_crosstab, index_cols):
     )
 
 
-def wb_to_df(wb, index_cols):
+def wb_to_df(wb, index_cols, country_knows_status_year=None):
     dfs_clean = []
     for sn in wb.sheetnames:
         if "crosstab" in sn.lower():
             sheet = wb[sn]
-            df_sheet = _crosstab_sheet_to_df(sheet)
+            df_sheet = _crosstab_sheet_to_df(sheet, country_knows_status_year=country_knows_status_year)
             df_sheet_clean = _crosstab_df_clean(df_sheet, index_cols)
             df_sheet_clean["sheet_name"] = sn
             dfs_clean.append(df_sheet_clean)

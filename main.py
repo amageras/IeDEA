@@ -8,7 +8,15 @@ import openpyxl
 from util import get_inverse_permutation, pp_grid, process_wb_df, prod, wb_to_df
 
 DS = ["IeDEA", "DHS"]
-INDEX = ["pregnant_controlling", "section_var_name", "section", "covariate"]
+INDEX = [
+    "country",
+    "knows_status",
+    "year",
+    "pregnant_controlling",
+    "section_var_name",
+    "section",
+    "covariate",
+]
 
 
 def _df_wb_proc_to_charts(
@@ -26,15 +34,24 @@ def _df_wb_proc_to_charts(
         .to_series()
     )
     df_wb_proc_idx.groupby(INDEX).apply(
-        lambda df: pp_grid(df, fig, axes[0], DS, INDEX, ordered_index)
+        lambda df: pp_grid(df, fig, axes[0], DS, INDEX, ordered_index, debug=debug)
     )
     fig.tight_layout(pad=4)
     return fig
 
 
 def _xl_to_charts(args):
+    def __parse_cksy(cyks_raw):
+        if cyks_raw:
+            parts = [p.strip() for p in cyks_raw.split(",")]
+            assert len(parts) == 3
+            return tuple(parts)
+        else:
+            return None
+
     wb = openpyxl.load_workbook(args.wb_path)
-    df_wb = wb_to_df(wb, INDEX)
+    country_knows_status_year = __parse_cksy(args.country_knows_status_year)
+    df_wb = wb_to_df(wb, INDEX, country_knows_status_year=country_knows_status_year)
 
     value_cols = ["Row_Percent", "N", "sheet_name"]
     df_wb_proc = process_wb_df(df_wb, value_cols, DS, INDEX).reset_index(drop=True)
@@ -43,7 +60,7 @@ def _xl_to_charts(args):
     # then "section_var_name",
     # then "section"
     # then "covariate"
-    idx_level_sort_precedence = [0, 1, 3, 2]
+    idx_level_sort_precedence = [0, 1, 2, 3, 4, 6, 5]
 
     grid_shape = (3, 2)
     figsize = (20, 20)
@@ -63,6 +80,13 @@ def main():
     parser.add_argument("wb_path", type=str, help="file path for excel workbook")
     parser.add_argument(
         "--debug", action="store_true",
+    )
+    parser.add_argument(
+        "--country_knows_status_year",
+        "--cksy",
+        type=str,
+        default=None,
+        help="optional comma-separated value like 'Burundi,All,2011'",
     )
     subparsers = parser.add_subparsers(help="how to do output", dest="sub_cmd")
     subparsers.required = True
