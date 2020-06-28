@@ -1,17 +1,11 @@
 #!/usr/bin/env python
 import argparse
-import operator
 import sys
 
 import matplotlib.pyplot as plt
-import numpy as np
 import openpyxl
-import pandas as pd
 
-from util import (_ds_sign, _get_inverse_permutation, cohens_h_label,
-                  fmt_tick_label, only, order_cat, parse_tick_number_text,
-                  pp_grid, process_wb_df, prod, sig_stars,
-                  t_test_p_value_two_tails, title_of, wb_to_df)
+from util import _get_inverse_permutation, pp_grid, process_wb_df, prod, wb_to_df
 
 DS = ["IeDEA", "DHS"]
 INDEX = ["pregnant_controlling", "section_var_name", "section", "covariate"]
@@ -20,7 +14,7 @@ INDEX = ["pregnant_controlling", "section_var_name", "section", "covariate"]
 def _df_wb_proc_to_charts(
     df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=(20, 20)
 ):
-    fig, axes = plt.subplots(*grid_shape, figsize=(20, 20))
+    fig, axes = plt.subplots(*grid_shape, figsize=figsize)
     axes = axes.reshape((1, prod(grid_shape)))
     df_wb_proc_idx = df_wb_proc.set_index(INDEX)
     idx_level_sort_inv = _get_inverse_permutation(idx_level_sort_precedence)
