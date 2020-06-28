@@ -42,7 +42,7 @@ def crosstab_sheet_to_df(
     )
     df_raw = pd.DataFrame(v[3:], columns=v[2])
     section = None
-    for idx, row in df_raw.iterrows():
+    for _, row in df_raw.iterrows():
         rd = row.to_dict()
         if rd[section_var_name]:
             section = rd[section_var_name]
@@ -61,7 +61,7 @@ def crosstab_sheet_to_df(
 
 def crosstab_df_clean(df_crosstab):
     Ns = {}
-    for idx, row in df_crosstab.iterrows():
+    for _, row in df_crosstab.iterrows():
         if row["level"] == "Total":
             Ns[row["section"]] = row["Frequency"]
 
