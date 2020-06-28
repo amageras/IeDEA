@@ -125,12 +125,17 @@ def _title_of(index_cols, title_pieces, debug=False):
         return "\n".join(map(str, pieces_dict.items()))
 
     cov = pieces_dict["covariate"]
-    return {
+    cov_display = {
         "agegrp": "Age Group",
         "bmigrp": "BMI Group",
         "marital_status": "Marital Status",
         "pregnant": "Pregnancy",
     }[cov]
+
+    dom = pieces_dict["section"]
+    dom_display = re.search(r"(\w*[mM]en)", dom).groups()[0]
+    year = pieces_dict["year"]
+    return f"{cov_display}\n({dom_display}, {year})"
 
 
 def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
