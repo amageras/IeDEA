@@ -5,6 +5,11 @@ import numpy as np
 import pandas as pd
 from scipy.stats import t
 
+# SECTIONS
+
+
+## General
+
 
 def _get_inverse_permutation(p):
     p_list = list(p)
@@ -23,8 +28,14 @@ def only(ser, lower_bound=0):
     return res
 
 
+# Stat
+
+
 def t_test_p_value_two_tails(z, df):
     return t.sf(abs(z), df=df) * 2
+
+
+# Stat Viz
 
 
 def sig_stars(z):
@@ -49,3 +60,4 @@ def cohens_h_label(ch):
         return "M-L"
     else:
         return "L"
+
