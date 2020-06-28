@@ -109,7 +109,8 @@ def wb_to_df(wb):
 def only(ser, lower_bound=0):
     l = pd.Series(ser).unique().tolist()
     assert lower_bound <= len(l) <= 1, l
-    return l[0] if len(ser) == 1 else None
+    res = l[0] if len(l) == 1 else None
+    return res
 
 
 def t_test_p_value_two_tails(z, df):
