@@ -351,9 +351,9 @@ def main():
     parser_save.add_argument("output_file", type=str, help="image file to write")
     _ = subparsers.add_parser("interactive", help="just plt.show()")
     args = parser.parse_args()
-    _ = _xl_to_charts(args)
+    fig = _xl_to_charts(args)
     if args.sub_cmd == "save":
-        pass
+        fig.savefig(args.output_file)
     elif args.sub_cmd == "interactive":
         plt.show()
     else:
