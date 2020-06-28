@@ -338,16 +338,28 @@ def _xl_to_charts(args):
             lambda df: pp_grid(df, fig, axes[0])
         )
         fig.tight_layout(pad=4)
-        plt.show()
 
-    return 0
+    return fig
 
 
 def main():
     parser = argparse.ArgumentParser(description="Process some integers.")
     parser.add_argument("wb_path", type=str, help="file path for excel workbook")
+    subparsers = parser.add_subparsers(help="how to do output", dest="sub_cmd")
+    subparsers.required = True
+    parser_save = subparsers.add_parser("save", help="write png")
+    parser_save.add_argument("output_file", type=str, help="image file to write")
+    _ = subparsers.add_parser("interactive", help="just plt.show()")
     args = parser.parse_args()
-    return _xl_to_charts(args)
+    _ = _xl_to_charts(args)
+    if args.sub_cmd == "save":
+        pass
+    elif args.sub_cmd == "interactive":
+        plt.show()
+    else:
+        sys.stderr.write(f"invalid sub_cmd: {args.sub_cmd}")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
