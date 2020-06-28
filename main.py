@@ -227,6 +227,11 @@ def flatten(l):
     return [e for _l in l for e in _l]
 
 
+def _ds_sign(_ds, left="IeDEA"):
+    assert _ds in DS
+    return (-1) ** int(_ds == left)
+
+
 def parse_tick_number_text(t):
     sgn = 1
     if t.startswith(chr(8722)):  # minus sign
@@ -251,31 +256,13 @@ def title_of(title_pieces):
     }[cov]
 
 
-def pp(df, ds, fig, ax):
-    assert len(ds) == 2
-    assert len(df.index.unique()) == 1, "pp: expected a unique index value"
-    cov_lvl = INDEX.index("covariate")
-    covariate = only(df.index.get_level_values(cov_lvl), lower_bound=1)
-    title_pieces = df.reset_index()[INDEX].loc[0].tolist()
-    df = df.reset_index().query("level != 'Total'")
-
-    plot_mask = (df[[f"Row_Percent_{_ds}" for _ds in ds]] != 0).any(axis=1)
-    df_plot_filt = df[plot_mask]
-    if len(df_plot_filt) == 0:
-        return False
+def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
     order_of_bars = order_cat(covariate, df_plot_filt["level"].unique())
-    colors = ["gray", "lightgrey"]
-    left = "IeDEA"
-
-    def __sign(_ds):
-        return (-1) ** int(_ds == left)
-
     bps = []
-
     for _ds, c in zip(ds, colors):
         x_col = f"Row_Percent_{_ds}"
         _df = df_plot_filt[[x_col, "level", "plot_label"]]
-        sgn = __sign(_ds)
+        sgn = _ds_sign(_ds)
         _df[x_col] = sgn * _df[x_col]
 
         bp = sns.barplot(
@@ -294,6 +281,24 @@ def pp(df, ds, fig, ax):
                     fontsize=20,
                 )
         bps.append(bp)
+    return bps
+
+
+def pp(df, ds, fig, ax):
+    assert len(ds) == 2
+    assert len(df.index.unique()) == 1, "pp: expected a unique index value"
+    cov_lvl = INDEX.index("covariate")
+    covariate = only(df.index.get_level_values(cov_lvl), lower_bound=1)
+    title_pieces = df.reset_index()[INDEX].loc[0].tolist()
+    df = df.reset_index().query("level != 'Total'")
+
+    plot_mask = (df[[f"Row_Percent_{_ds}" for _ds in ds]] != 0).any(axis=1)
+    df_plot_filt = df[plot_mask]
+    if len(df_plot_filt) == 0:
+        return False
+    colors = ["gray", "lightgrey"]
+
+    bps = _get_barplots(df_plot_filt, covariate, ds, colors, ax)
 
     ax.set_xlabel("Percent")
     ax.set_ylabel("Level")
