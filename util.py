@@ -300,10 +300,10 @@ def wb_to_df(wb, index_cols):
         # dont care about them
         (~dfc.section.str.contains("HIV Negative")),
         ~(dfc.pregnant_controlling == "Yes"),
-        ~(
-            (dfc.section.str.lower().str.contains("men"))
-            & (dfc.covariate == "pregnant")
-        ),
+
+        # if covariate = pregnant, section contains women
+        # = (section contains women or covariate != pregnant)
+        ((dfc.section.str.lower().str.contains("women")) | (dfc.covariate != "pregnant"))
     ]
     mask = pd.concat(filters, axis=1).all(axis=1)
     return dfc[mask]
