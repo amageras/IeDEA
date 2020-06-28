@@ -5,7 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 import openpyxl
 
-from util import _get_inverse_permutation, pp_grid, process_wb_df, prod, wb_to_df
+from util import get_inverse_permutation, pp_grid, process_wb_df, prod, wb_to_df
 
 DS = ["IeDEA", "DHS"]
 INDEX = ["pregnant_controlling", "section_var_name", "section", "covariate"]
@@ -17,7 +17,7 @@ def _df_wb_proc_to_charts(
     fig, axes = plt.subplots(*grid_shape, figsize=figsize)
     axes = axes.reshape((1, prod(grid_shape)))
     df_wb_proc_idx = df_wb_proc.set_index(INDEX)
-    idx_level_sort_inv = _get_inverse_permutation(idx_level_sort_precedence)
+    idx_level_sort_inv = get_inverse_permutation(idx_level_sort_precedence)
     ordered_index = (
         df_wb_proc_idx.reorder_levels([0, 1, 3, 2])
         .sort_index()

@@ -16,7 +16,7 @@ from scipy.stats import t
 ## General
 
 
-def _get_inverse_permutation(p):
+def get_inverse_permutation(p):
     p_list = list(p)
     assert sorted(p_list) == list(range(len(p_list))), f"{p} is not a permutation"
     return np.argsort(p)
@@ -43,7 +43,7 @@ def t_test_p_value_two_tails(z, df):
 # Viz - Stat
 
 
-def sig_stars(z):
+def _sig_stars(z):
     if abs(z) > 2.58:
         return "*" * 3
     elif abs(z) > 1.96:
@@ -54,7 +54,7 @@ def sig_stars(z):
         return ""
 
 
-def cohens_h_label(ch):
+def _cohens_h_label(ch):
     if abs(ch) < 0.3:
         return "S"
     elif abs(ch) < 0.4:
@@ -70,7 +70,7 @@ def cohens_h_label(ch):
 # Viz - General
 
 
-def order_cat(covariate, vals):
+def _order_cat(covariate, vals):
     bmigrps_ordered = [
         "Underweight",
         "Normal Range",
@@ -108,7 +108,7 @@ def _ds_sign(ds, _ds, left="IeDEA"):
     return (-1) ** int(_ds == left)
 
 
-def parse_tick_number_text(t):
+def _parse_tick_number_text(t):
     sgn = 1
     if t.startswith(chr(8722)):  # minus sign
         sgn = -1
@@ -117,11 +117,11 @@ def parse_tick_number_text(t):
     return sgn * float(t)
 
 
-def fmt_tick_label(x):
+def _fmt_tick_label(x):
     return str(int(x))
 
 
-def title_of(index_cols, title_pieces):
+def _title_of(index_cols, title_pieces):
     pieces_dict = dict(zip(index_cols, title_pieces))
     cov = pieces_dict["covariate"]
     return {
@@ -133,7 +133,7 @@ def title_of(index_cols, title_pieces):
 
 
 def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
-    order_of_bars = order_cat(covariate, df_plot_filt["level"].unique())
+    order_of_bars = _order_cat(covariate, df_plot_filt["level"].unique())
     bps = []
     for _ds, c in zip(ds, colors):
         x_col = f"Row_Percent_{_ds}"
@@ -174,7 +174,7 @@ def _get_axis_key(index, ordered_index):
         return -1
 
 
-def pp(df, ds, index_cols, fig, ax):
+def _pp(df, ds, index_cols, fig, ax):
     assert len(ds) == 2
     assert len(df.index.unique()) == 1, "pp: expected a unique index value"
     cov_lvl = index_cols.index("covariate")
@@ -192,14 +192,14 @@ def pp(df, ds, index_cols, fig, ax):
 
     ax.set_xlabel("Percent")
     ax.set_ylabel("Level")
-    ax.set_title(title_of(index_cols, title_pieces), fontsize=22)
+    ax.set_title(_title_of(index_cols, title_pieces), fontsize=22)
     ax.legend(handles=[Patch(facecolor=c, label=_ds) for _ds, c in zip(ds, colors)])
 
     fig.canvas.draw()
     fig.show()
     for bp in bps:
         xtl = bp.xaxis.get_ticklabels()
-        xtl2 = [fmt_tick_label(abs(parse_tick_number_text(t.get_text()))) for t in xtl]
+        xtl2 = [_fmt_tick_label(abs(_parse_tick_number_text(t.get_text()))) for t in xtl]
         bp.set_xticklabels(xtl2)
 
     return True
@@ -214,13 +214,13 @@ def pp_grid(grp, fig, axes, ds, index_cols, ordered_index):
     """
     ax_key = _get_axis_key(grp.index, ordered_index)
     ax = axes[ax_key]
-    return pp(grp, ds, index_cols, fig, ax)
+    return _pp(grp, ds, index_cols, fig, ax)
 
 
 ## Data Processing
 
 
-def crosstab_sheet_to_df(
+def _crosstab_sheet_to_df(
     sheet, section_var_name="domain", controlling_for_aside_from_dataset=None
 ):
     assert controlling_for_aside_from_dataset in [
@@ -261,7 +261,7 @@ def crosstab_sheet_to_df(
     return df_out.rename(columns={covariate: "level"})
 
 
-def crosstab_df_clean(df_crosstab, index_cols):
+def _crosstab_df_clean(df_crosstab, index_cols):
     Ns = {}
     for _, row in df_crosstab.iterrows():
         if row["level"] == "Total":
@@ -281,8 +281,8 @@ def wb_to_df(wb, index_cols):
     for sn in wb.sheetnames:
         if "crosstab" in sn.lower():
             sheet = wb[sn]
-            df_sheet = crosstab_sheet_to_df(sheet)
-            df_sheet_clean = crosstab_df_clean(df_sheet, index_cols)
+            df_sheet = _crosstab_sheet_to_df(sheet)
+            df_sheet_clean = _crosstab_df_clean(df_sheet, index_cols)
             df_sheet_clean["sheet_name"] = sn
             dfs_clean.append(df_sheet_clean)
 
@@ -352,12 +352,12 @@ def process_wb_df(df, values, ds, index_cols):
         df_dropped["z_value"], df_dropped["N_IeDEA"] - 1
     )
     df_dropped["p_value_round"] = df_dropped["p_value"].round(4)
-    df_dropped["significance_label"] = df_dropped["z_value"].apply(sig_stars)
+    df_dropped["significance_label"] = df_dropped["z_value"].apply(_sig_stars)
     df_dropped["cohens_h"] = (
         2 * np.arcsin(np.sqrt(df_dropped["proportion_IeDEA"]))
     ) - (2 * np.arcsin(np.sqrt(df_dropped["proportion_DHS"])))
 
-    df_dropped["cohens_h_label"] = df_dropped["cohens_h"].apply(cohens_h_label)
+    df_dropped["cohens_h_label"] = df_dropped["cohens_h"].apply(_cohens_h_label)
     df_dropped["plot_label"] = df_dropped.apply(
         lambda r: " ".join([r["cohens_h_label"], r["significance_label"]]), axis=1
     )
