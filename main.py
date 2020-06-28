@@ -3,6 +3,8 @@ import argparse
 import sys
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 import openpyxl
 
 from util import get_inverse_permutation, pp_grid, process_wb_df, prod, wb_to_df
@@ -18,9 +20,43 @@ INDEX = [
     "covariate",
 ]
 
+COV_ORDER = ["agegrp", "marital_status", "bmigrp", "pregnant"]
+
+
+
+def _cov_sort_index(cov):
+    if cov in COV_ORDER:
+        return COV_ORDER.index(cov)
+    else:
+        raise ValueError(f"{cov} missing from {COV_ORDER}")
+
+def _cov_from_sort_index(idx):
+    return COV_ORDER[idx]
+
+
+def multiindex_replace(idx, lvl, replace_fn):
+    tuple_list = idx.tolist()
+    for i in range(len(tuple_list)):
+        _l = list(tuple_list[i])
+        _l[lvl] = replace_fn(_l[lvl])
+        tuple_list[i] = tuple(_l)
+
+    return pd.MultiIndex.from_tuples(tuple_list, names=idx.names)
+
+def _get_df_with_sortable_idx(df, index_cols):
+    df2 = df.copy()
+    cov_lvl = index_cols.index("covariate")
+    df2.index = multiindex_replace(df2.index, cov_lvl, _cov_sort_index)
+    return df2
+
+
+def _get_index_from_order_hacked_index(index, index_cols):
+    cov_lvl = index_cols.index("covariate")
+    return multiindex_replace(index, cov_lvl, _cov_from_sort_index)
+
 
 def _df_wb_proc_to_charts(
-    df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=(20, 20), debug=False
+    df_wb_proc, grid_shape, precedence, figsize=(20, 20), debug=False
 ):
     """
     rule: 
@@ -32,17 +68,22 @@ def _df_wb_proc_to_charts(
         insert any missing years as blanks then sort by year
 
     """
+    idx_level_sort_precedence = [INDEX.index(pr) for pr in precedence]    
+
     fig, axes = plt.subplots(*grid_shape, figsize=figsize)
     axes = axes.reshape((1, prod(grid_shape)))
     df_wb_proc_idx = df_wb_proc.set_index(INDEX)
     idx_level_sort_inv = get_inverse_permutation(idx_level_sort_precedence)
-    ordered_index = (
-        df_wb_proc_idx.reorder_levels(idx_level_sort_precedence)
-        .sort_index()
+
+    df_wb_proc_idx_sortable = _get_df_with_sortable_idx(df_wb_proc_idx, INDEX)
+    ordered_index_raw = pd.MultiIndex.from_tuples(
+        df_wb_proc_idx_sortable.reorder_levels(idx_level_sort_precedence)
+        .sort_index()\
         .reorder_levels(idx_level_sort_inv)
         .index.unique()
         .to_series()
     )
+    ordered_index = _get_index_from_order_hacked_index(ordered_index_raw, INDEX)
     df_wb_proc_idx.groupby(INDEX).apply(
         lambda df: pp_grid(df, fig, axes[0], DS, INDEX, ordered_index, debug=debug)
     )
@@ -65,22 +106,15 @@ def _xl_to_charts(args):
 
     value_cols = ["Row_Percent", "N", "sheet_name"]
     df_wb_proc = process_wb_df(df_wb, value_cols, DS, INDEX).reset_index(drop=True)
-    # sort the grid (row major order) by
-    # "pregnant_controlling",
-    # then "section_var_name",
-    # then "section"
-    # then "covariate"
-
     precedence = [
         "country",
         "knows_status",
         "section",
-        "pregnant_controlling",        
         "covariate",
         "year",
+        "pregnant_controlling",        
         "section_var_name",
     ]
-    idx_level_sort_precedence = [INDEX.index(pr) for pr in precedence]
 
     grid_shape = (3, 2)
     figsize = (20, 20)
@@ -88,7 +122,7 @@ def _xl_to_charts(args):
     fig = _df_wb_proc_to_charts(
         df_wb_proc,
         grid_shape,
-        idx_level_sort_precedence,
+        precedence,
         figsize=figsize,
         debug=args.debug,
     )
