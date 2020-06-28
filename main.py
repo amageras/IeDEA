@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 import itertools
 import re
 import sys
@@ -321,13 +322,13 @@ def pp_grid(grp, fig, axes):
     pp(grp, DS, fig, ax)
 
 
-def main():
+def _xl_to_charts(args):
     pd.set_option("mode.chained_assignment", None)
 
     with pd.option_context("display.max_rows", None):
         values = ["Row_Percent", "N", "sheet_name"]
 
-        wb = openpyxl.load_workbook(sys.argv[1])
+        wb = openpyxl.load_workbook(args.wb_path)
         df_wb = wb_to_df(wb)
         df_wb_proc = process_wb_df(df_wb, values, DS).reset_index(drop=True)
         fig, axes = plt.subplots(3, 2, figsize=(20, 20))
@@ -340,6 +341,13 @@ def main():
         plt.show()
 
     return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser.add_argument("wb_path", type=str, help="file path for excel workbook")
+    args = parser.parse_args()
+    return _xl_to_charts(args)
 
 
 if __name__ == "__main__":
