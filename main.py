@@ -354,6 +354,27 @@ def prod(iterable):
     return reduce(operator.mul, iterable, 1)
 
 
+def _df_wb_proc_to_charts(
+    df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=(20, 20)
+):
+    fig, axes = plt.subplots(*grid_shape, figsize=(20, 20))
+    axes = axes.reshape((1, prod(grid_shape)))
+    df_wb_proc_idx = df_wb_proc.set_index(INDEX)
+    idx_level_sort_inv = _get_inverse_permutation(idx_level_sort_precedence)
+    ordered_index = (
+        df_wb_proc_idx.reorder_levels([0, 1, 3, 2])
+        .sort_index()
+        .reorder_levels(idx_level_sort_inv)
+        .index.unique()
+        .to_series()
+    )
+    df_wb_proc_idx.groupby(INDEX).apply(
+        lambda df: pp_grid(df, fig, axes[0], ordered_index)
+    )
+    fig.tight_layout(pad=4)
+    return fig
+
+
 def _xl_to_charts(args):
     pd.set_option("mode.chained_assignment", None)
 
@@ -363,25 +384,14 @@ def _xl_to_charts(args):
         wb = openpyxl.load_workbook(args.wb_path)
         df_wb = wb_to_df(wb)
         df_wb_proc = process_wb_df(df_wb, values, DS).reset_index(drop=True)
-        grid_shape = (3, 2)
-        fig, axes = plt.subplots(*grid_shape, figsize=(20, 20))
-        axes = axes.reshape((1, prod(grid_shape)))
-        df_wb_proc_idx = df_wb_proc.set_index(INDEX)
         idx_level_sort_precedence = [0, 1, 3, 2]
-        idx_level_sort_inv = _get_inverse_permutation(idx_level_sort_precedence)
-        ordered_index = (
-            df_wb_proc_idx.reorder_levels([0, 1, 3, 2])
-            .sort_index()
-            .reorder_levels(idx_level_sort_inv)
-            .index.unique()
-            .to_series()
-        )
-        df_wb_proc_idx.groupby(INDEX).apply(
-            lambda df: pp_grid(df, fig, axes[0], ordered_index)
-        )
-        fig.tight_layout(pad=4)
+        grid_shape = (3, 2)
+        figsize = (20, 20)
 
-    return fig
+        fig = _df_wb_proc_to_charts(
+            df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=figsize
+        )
+        return fig
 
 
 def main():
