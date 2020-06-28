@@ -30,11 +30,11 @@ def crosstab_sheet_to_df(
     v = list(sheet.values)[2:]
 
     table_of = v[0][0]
-    section_var_name, covariate = re.search("(\w+) by (\w+)", table_of).groups()
+    section_var_name, covariate = re.search(r"(\w+) by (\w+)", table_of).groups()
     controlling_for = v[1][0]
-    m_dataset = re.search("dataset=([^ ]*)", controlling_for)
+    m_dataset = re.search(r"dataset=([^ ]*)", controlling_for)
     dataset = m_dataset.groups()[0]
-    m_pregnant_controlling = re.search("pregnant=(\w*)", controlling_for)
+    m_pregnant_controlling = re.search(r"pregnant=(\w*)", controlling_for)
     pregnant_controlling = (
         m_pregnant_controlling.groups()[0].strip()
         if m_pregnant_controlling is not None
