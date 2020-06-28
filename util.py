@@ -119,8 +119,11 @@ def _fmt_tick_label(x):
     return str(int(x))
 
 
-def _title_of(index_cols, title_pieces):
+def _title_of(index_cols, title_pieces, debug=False):    
     pieces_dict = dict(zip(index_cols, title_pieces))
+    if debug:
+        return "\n".join(map(str, pieces_dict.items()))
+
     cov = pieces_dict["covariate"]
     return {
         "agegrp": "Age Group",
@@ -172,7 +175,7 @@ def _get_axis_key(index, ordered_index):
         return -1
 
 
-def _pp(df, ds, index_cols, fig, ax):
+def _pp(df, ds, index_cols, fig, ax, debug=False):
     assert len(ds) == 2
     assert len(df.index.unique()) == 1, "pp: expected a unique index value"
     cov_lvl = index_cols.index("covariate")
@@ -190,7 +193,7 @@ def _pp(df, ds, index_cols, fig, ax):
 
     ax.set_xlabel("Percent")
     ax.set_ylabel("Level")
-    ax.set_title(_title_of(index_cols, title_pieces), fontsize=22)
+    ax.set_title(_title_of(index_cols, title_pieces, debug=debug), fontsize=22)
     ax.legend(handles=[Patch(facecolor=c, label=_ds) for _ds, c in zip(ds, colors)])
 
     fig.canvas.draw()
@@ -203,7 +206,7 @@ def _pp(df, ds, index_cols, fig, ax):
     return True
 
 
-def pp_grid(grp, fig, axes, ds, index_cols, ordered_index):
+def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False):
     """
     grp: dataframe whose index is like `index` in `_get_axis_key()`
     axes: 1-d array in row-major order
@@ -212,7 +215,7 @@ def pp_grid(grp, fig, axes, ds, index_cols, ordered_index):
     """
     ax_key = _get_axis_key(grp.index, ordered_index)
     ax = axes[ax_key]
-    return _pp(grp, ds, index_cols, fig, ax)
+    return _pp(grp, ds, index_cols, fig, ax, debug=debug)
 
 
 ## Data Processing

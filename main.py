@@ -12,7 +12,7 @@ INDEX = ["pregnant_controlling", "section_var_name", "section", "covariate"]
 
 
 def _df_wb_proc_to_charts(
-    df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=(20, 20)
+    df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=(20, 20), debug=False
 ):
     fig, axes = plt.subplots(*grid_shape, figsize=figsize)
     axes = axes.reshape((1, prod(grid_shape)))
@@ -49,7 +49,11 @@ def _xl_to_charts(args):
     figsize = (20, 20)
 
     fig = _df_wb_proc_to_charts(
-        df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=figsize
+        df_wb_proc,
+        grid_shape,
+        idx_level_sort_precedence,
+        figsize=figsize,
+        debug=args.debug,
     )
     return fig
 
@@ -57,6 +61,9 @@ def _xl_to_charts(args):
 def main():
     parser = argparse.ArgumentParser(description="Process some integers.")
     parser.add_argument("wb_path", type=str, help="file path for excel workbook")
+    parser.add_argument(
+        "--debug", action="store_true",
+    )
     subparsers = parser.add_subparsers(help="how to do output", dest="sub_cmd")
     subparsers.required = True
     parser_save = subparsers.add_parser("save", help="write png")
