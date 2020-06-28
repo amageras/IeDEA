@@ -45,10 +45,8 @@ def t_test_p_value_two_tails(z, df):
 
 def _sig_stars(z):
     if abs(z) > 2.58:
-        return "*" * 3
-    elif abs(z) > 1.96:
         return "*" * 2
-    elif abs(z) > 1.68:
+    elif abs(z) > 1.96:
         return "*"
     else:
         return ""
