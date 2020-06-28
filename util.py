@@ -16,12 +16,6 @@ from scipy.stats import t
 ## General
 
 
-def get_inverse_permutation(p):
-    p_list = list(p)
-    assert sorted(p_list) == list(range(len(p_list))), f"{p} is not a permutation"
-    return np.argsort(p)
-
-
 def prod(iterable):
     return reduce(operator.mul, iterable, 1)
 
@@ -172,7 +166,7 @@ def _get_axis_key(index, ordered_index):
     ordered_index as expected in `pp_grid()`
     """
     idx_value = only(index.to_series(), lower_bound=1)
-    ordered_list = ordered_index.tolist()
+    ordered_list = list(ordered_index)
     try:
         return ordered_list.index(idx_value)
     except ValueError:
