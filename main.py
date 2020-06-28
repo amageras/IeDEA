@@ -19,7 +19,7 @@ def _df_wb_proc_to_charts(
     df_wb_proc_idx = df_wb_proc.set_index(INDEX)
     idx_level_sort_inv = get_inverse_permutation(idx_level_sort_precedence)
     ordered_index = (
-        df_wb_proc_idx.reorder_levels([0, 1, 3, 2])
+        df_wb_proc_idx.reorder_levels(idx_level_sort_precedence)
         .sort_index()
         .reorder_levels(idx_level_sort_inv)
         .index.unique()
