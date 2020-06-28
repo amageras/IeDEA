@@ -22,6 +22,16 @@ INDEX = [
 def _df_wb_proc_to_charts(
     df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=(20, 20), debug=False
 ):
+    """
+    rule: 
+      group and sort by country, then knows status (1 page per value)
+        (order doesn't matter)
+      for each country and knows status, group and sort by domain, then covariate
+        Men first, [agegrp, marital_status, bmigrp, pregnancy]
+      for each page, domain, and covariate (i.e. for each row)
+        insert any missing years as blanks then sort by year
+
+    """
     fig, axes = plt.subplots(*grid_shape, figsize=figsize)
     axes = axes.reshape((1, prod(grid_shape)))
     df_wb_proc_idx = df_wb_proc.set_index(INDEX)
