@@ -376,22 +376,25 @@ def _df_wb_proc_to_charts(
 
 
 def _xl_to_charts(args):
-    pd.set_option("mode.chained_assignment", None)
+    wb = openpyxl.load_workbook(args.wb_path)
+    df_wb = wb_to_df(wb)
 
-    with pd.option_context("display.max_rows", None):
-        values = ["Row_Percent", "N", "sheet_name"]
+    value_cols = ["Row_Percent", "N", "sheet_name"]
+    df_wb_proc = process_wb_df(df_wb, value_cols, DS).reset_index(drop=True)
+    # sort the grid (row major order) by
+    # "pregnant_controlling",
+    # then "section_var_name",
+    # then "section"
+    # then "covariate"
+    idx_level_sort_precedence = [0, 1, 3, 2]
 
-        wb = openpyxl.load_workbook(args.wb_path)
-        df_wb = wb_to_df(wb)
-        df_wb_proc = process_wb_df(df_wb, values, DS).reset_index(drop=True)
-        idx_level_sort_precedence = [0, 1, 3, 2]
-        grid_shape = (3, 2)
-        figsize = (20, 20)
+    grid_shape = (3, 2)
+    figsize = (20, 20)
 
-        fig = _df_wb_proc_to_charts(
-            df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=figsize
-        )
-        return fig
+    fig = _df_wb_proc_to_charts(
+        df_wb_proc, grid_shape, idx_level_sort_precedence, figsize=figsize
+    )
+    return fig
 
 
 def main():
