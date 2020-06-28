@@ -12,8 +12,9 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.patches import Patch
 
-from util import (_get_inverse_permutation, cohens_h_label, only, prod,
-                   sig_stars, t_test_p_value_two_tails)
+from util import (_ds_sign, _get_inverse_permutation, cohens_h_label,
+                  fmt_tick_label, only, order_cat, parse_tick_number_text,
+                  prod, sig_stars, t_test_p_value_two_tails, title_of)
 
 DS = ["IeDEA", "DHS"]
 INDEX = ["pregnant_controlling", "section_var_name", "section", "covariate"]
@@ -159,75 +160,13 @@ def process_wb_df(df, values, ds):
     return df_dropped
 
 
-def order_cat(covariate, vals):
-    bmigrps_ordered = [
-        "Underweight",
-        "Normal Range",
-        "Overweight",
-        "Obese",
-    ]
-    agegrps_ordered = [
-        "15-19",
-        "20-24",
-        "25-29",
-        "30-34",
-        "35-39",
-        "40-44",
-        "45-49",
-        "50-54",
-        "55-59",
-    ]
-
-    def __index_of(v, lst):
-        for i, l in enumerate(lst):
-            if l.lower() == v.lower():
-                return i
-        return float("inf")
-
-    if covariate == "bmigrp":
-        return list(sorted(vals, key=lambda v: __index_of(v, bmigrps_ordered)))
-    elif covariate == "agegrp":
-        return list(sorted(vals, key=lambda v: __index_of(v, agegrps_ordered)))
-    else:
-        return list(sorted(vals))
-
-
-def _ds_sign(_ds, left="IeDEA"):
-    assert _ds in DS
-    return (-1) ** int(_ds == left)
-
-
-def parse_tick_number_text(t):
-    sgn = 1
-    if t.startswith(chr(8722)):  # minus sign
-        sgn = -1
-        t = t[1:]
-
-    return sgn * float(t)
-
-
-def fmt_tick_label(x):
-    return str(int(x))
-
-
-def title_of(title_pieces):
-    pieces_dict = dict(zip(INDEX, title_pieces))
-    cov = pieces_dict["covariate"]
-    return {
-        "agegrp": "Age Group",
-        "bmigrp": "BMI Group",
-        "marital_status": "Marital Status",
-        "pregnant": "Pregnancy",
-    }[cov]
-
-
 def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
     order_of_bars = order_cat(covariate, df_plot_filt["level"].unique())
     bps = []
     for _ds, c in zip(ds, colors):
         x_col = f"Row_Percent_{_ds}"
         _df = df_plot_filt[[x_col, "level", "plot_label"]]
-        sgn = _ds_sign(_ds)
+        sgn = _ds_sign(ds, _ds)
         _df[x_col] = sgn * _df[x_col]
 
         bp = sns.barplot(
@@ -267,7 +206,7 @@ def pp(df, ds, fig, ax):
 
     ax.set_xlabel("Percent")
     ax.set_ylabel("Level")
-    ax.set_title(title_of(title_pieces), fontsize=22)
+    ax.set_title(title_of(INDEX, title_pieces), fontsize=22)
     ax.legend(handles=[Patch(facecolor=c, label=_ds) for _ds, c in zip(ds, colors)])
 
     fig.canvas.draw()

@@ -35,7 +35,7 @@ def t_test_p_value_two_tails(z, df):
     return t.sf(abs(z), df=df) * 2
 
 
-# Stat Viz
+# Viz - Stat
 
 
 def sig_stars(z):
@@ -61,3 +61,67 @@ def cohens_h_label(ch):
     else:
         return "L"
 
+
+# Viz - General
+
+
+def order_cat(covariate, vals):
+    bmigrps_ordered = [
+        "Underweight",
+        "Normal Range",
+        "Overweight",
+        "Obese",
+    ]
+    agegrps_ordered = [
+        "15-19",
+        "20-24",
+        "25-29",
+        "30-34",
+        "35-39",
+        "40-44",
+        "45-49",
+        "50-54",
+        "55-59",
+    ]
+
+    def __index_of(v, lst):
+        for i, l in enumerate(lst):
+            if l.lower() == v.lower():
+                return i
+        return float("inf")
+
+    if covariate == "bmigrp":
+        return list(sorted(vals, key=lambda v: __index_of(v, bmigrps_ordered)))
+    elif covariate == "agegrp":
+        return list(sorted(vals, key=lambda v: __index_of(v, agegrps_ordered)))
+    else:
+        return list(sorted(vals))
+
+
+def _ds_sign(ds, _ds, left="IeDEA"):
+    assert _ds in ds
+    return (-1) ** int(_ds == left)
+
+
+def parse_tick_number_text(t):
+    sgn = 1
+    if t.startswith(chr(8722)):  # minus sign
+        sgn = -1
+        t = t[1:]
+
+    return sgn * float(t)
+
+
+def fmt_tick_label(x):
+    return str(int(x))
+
+
+def title_of(index_cols, title_pieces):
+    pieces_dict = dict(zip(index_cols, title_pieces))
+    cov = pieces_dict["covariate"]
+    return {
+        "agegrp": "Age Group",
+        "bmigrp": "BMI Group",
+        "marital_status": "Marital Status",
+        "pregnant": "Pregnancy",
+    }[cov]
