@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import argparse
 import itertools
+import operator
 import re
 import sys
+from functools import reduce
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +13,6 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.patches import Patch
 from scipy.stats import t
-
 
 DS = ["IeDEA", "DHS"]
 INDEX = ["pregnant_controlling", "section_var_name", "section", "covariate"]
@@ -349,6 +350,10 @@ def _get_inverse_permutation(p):
     return np.argsort(p)
 
 
+def prod(iterable):
+    return reduce(operator.mul, iterable, 1)
+
+
 def _xl_to_charts(args):
     pd.set_option("mode.chained_assignment", None)
 
@@ -358,8 +363,9 @@ def _xl_to_charts(args):
         wb = openpyxl.load_workbook(args.wb_path)
         df_wb = wb_to_df(wb)
         df_wb_proc = process_wb_df(df_wb, values, DS).reset_index(drop=True)
-        fig, axes = plt.subplots(3, 2, figsize=(20, 20))
-        axes = axes.reshape((1, 6))
+        grid_shape = (3, 2)
+        fig, axes = plt.subplots(*grid_shape, figsize=(20, 20))
+        axes = axes.reshape((1, prod(grid_shape)))
         df_wb_proc_idx = df_wb_proc.set_index(INDEX)
         idx_level_sort_precedence = [0, 1, 3, 2]
         idx_level_sort_inv = _get_inverse_permutation(idx_level_sort_precedence)
