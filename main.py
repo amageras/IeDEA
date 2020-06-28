@@ -317,10 +317,36 @@ def pp(df, ds, fig, ax):
     return True
 
 
-def pp_grid(grp, fig, axes):
-    ax_key = only(grp["axis_key"].unique())
+def _get_axis_key(index, ordered_index):
+    """
+    index: index with levels as in INDEX, with a single unique value
+    ordered_index as expected in `pp_grid()`
+    """
+    idx_value = only(index.to_series(), lower_bound=1)
+    ordered_list = ordered_index.tolist()
+    try:
+        return ordered_list.index(idx_value)
+    except ValueError:
+        sys.stderr.write(f"{idx_value}\nNOT FOUND IN\n{ordered_list}\n")
+        return -1
+
+
+def pp_grid(grp, fig, axes, ordered_index):
+    """
+    grp: dataframe whose index is like `index` in `_get_axis_key()`
+    axes: 1-d array in row-major order
+    ordered_index: ordered array of tuples where
+        each element is an instance of INDEX
+    """
+    ax_key = _get_axis_key(grp.index, ordered_index)
     ax = axes[ax_key]
-    pp(grp, DS, fig, ax)
+    return pp(grp, DS, fig, ax)
+
+
+def _get_inverse_permutation(p):
+    p_list = list(p)
+    assert sorted(p_list) == list(range(len(p_list))), f"{p} is not a permutation"
+    return np.argsort(p)
 
 
 def _xl_to_charts(args):
@@ -334,9 +360,18 @@ def _xl_to_charts(args):
         df_wb_proc = process_wb_df(df_wb, values, DS).reset_index(drop=True)
         fig, axes = plt.subplots(3, 2, figsize=(20, 20))
         axes = axes.reshape((1, 6))
-        df_wb_proc["axis_key"] = df_wb_proc.groupby(INDEX).ngroup()
-        df_wb_proc.set_index(INDEX).groupby(INDEX).apply(
-            lambda df: pp_grid(df, fig, axes[0])
+        df_wb_proc_idx = df_wb_proc.set_index(INDEX)
+        idx_level_sort_precedence = [0, 1, 3, 2]
+        idx_level_sort_inv = _get_inverse_permutation(idx_level_sort_precedence)
+        ordered_index = (
+            df_wb_proc_idx.reorder_levels([0, 1, 3, 2])
+            .sort_index()
+            .reorder_levels(idx_level_sort_inv)
+            .index.unique()
+            .to_series()
+        )
+        df_wb_proc_idx.groupby(INDEX).apply(
+            lambda df: pp_grid(df, fig, axes[0], ordered_index)
         )
         fig.tight_layout(pad=4)
 
