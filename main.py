@@ -70,7 +70,17 @@ def _xl_to_charts(args):
     # then "section_var_name",
     # then "section"
     # then "covariate"
-    idx_level_sort_precedence = [0, 1, 2, 3, 4, 6, 5]
+
+    precedence = [
+        "country",
+        "knows_status",
+        "section",
+        "pregnant_controlling",        
+        "covariate",
+        "year",
+        "section_var_name",
+    ]
+    idx_level_sort_precedence = [INDEX.index(pr) for pr in precedence]
 
     grid_shape = (3, 2)
     figsize = (20, 20)
