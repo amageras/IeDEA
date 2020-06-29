@@ -222,42 +222,47 @@ def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False):
 ## Data Processing
 
 
-def _parse_crosstab_sheet_values(sheet, country_knows_status_year):
+def _parse_crosstab_preproc(sheet, country_knows_status_year):
+    v = list(sheet.values)
     if country_knows_status_year is None:
-        pass
+        country, knows_status, year = [_v.strip() for _v in v[0][0].split()][:3]
+        return country, knows_status, year, v[4:]
     else:
         country, knows_status, year = country_knows_status_year
-        v = list(sheet.values)[2:]
+        return country, knows_status, year, v[2:]
 
-        table_of = v[0][0]
-        section_var_name, covariate = re.search(r"(\w+) by (\w+)", table_of).groups()
-        controlling_for = v[1][0]
-        m_dataset = re.search(r"dataset=([^ ]*)", controlling_for)
-        dataset = m_dataset.groups()[0]
-        m_pregnant_controlling = re.search(r"pregnant=(\w*)", controlling_for)
-        pregnant_controlling = (
-            m_pregnant_controlling.groups()[0].strip()
-            if m_pregnant_controlling is not None
-            else "N/A"
-        )
-        df_raw = pd.DataFrame(v[3:], columns=v[2])
 
-        return (
-            country,
-            knows_status,
-            year,
-            covariate,
-            dataset,
-            pregnant_controlling,
-            df_raw,
-        )
+def _parse_crosstab_sheet_values(sheet, country_knows_status_year):
+    country, knows_status, year, v = _parse_crosstab_preproc(
+        sheet, country_knows_status_year
+    )
+    table_of = v[0][0]
+    section_var_name, covariate = re.search(r"(\w+) by (\w+)", table_of).groups()
+    controlling_for = v[1][0]
+    m_dataset = re.search(r"dataset=([^ ]*)", controlling_for)
+    dataset = m_dataset.groups()[0]
+    m_pregnant_controlling = re.search(r"pregnant=(\w*)", controlling_for)
+    pregnant_controlling = (
+        m_pregnant_controlling.groups()[0].strip()
+        if m_pregnant_controlling is not None
+        else "N/A"
+    )
+    df_raw = pd.DataFrame(v[3:], columns=v[2])
+
+    return (
+        country,
+        knows_status,
+        year,
+        section_var_name,
+        covariate,
+        dataset,
+        pregnant_controlling,
+        df_raw,
+    )
 
 
 def _crosstab_sheet_to_df(
-    sheet,
-    section_var_name="domain",
-    controlling_for_aside_from_dataset=None,
-    country_knows_status_year=None,
+    sheet, controlling_for_aside_from_dataset=None, country_knows_status_year=None,
 ):
     """
         country_knows_status_year: a triple like (country, knows_status, year) or None
@@ -267,19 +272,17 @@ def _crosstab_sheet_to_df(
         "pregnant",
         None,
     ], "currently can only control for pregnant"
-    assert section_var_name == "domain", "TODO: refactor. This is conceptually simpler"
-    if country_knows_status_year is None:
-        raise ValueError("not yet implemented")
-
     (
         country,
         knows_status,
         year,
+        section_var_name,
         covariate,
         dataset,
         pregnant_controlling,
         df_raw,
     ) = _parse_crosstab_sheet_values(sheet, country_knows_status_year)
+    assert section_var_name == "domain", f"TODO: refactor. This is conceptually simpler {section_var_name}"
 
     out = []
     section = None
