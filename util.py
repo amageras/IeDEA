@@ -225,7 +225,7 @@ def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False):
 def _parse_crosstab_preproc(sheet, country_knows_status_year):
     v = list(sheet.values)
     if country_knows_status_year is None:
-        country, knows_status, year = [_v.strip() for _v in v[0][0].split()][:3]
+        country, year, knows_status = [_v.strip() for _v in v[0][0].split()][:3]
         return country, knows_status, year, v[4:]
     else:
         country, knows_status, year = country_knows_status_year
