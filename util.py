@@ -113,7 +113,7 @@ def _fmt_tick_label(x):
     return str(int(x))
 
 
-def _title_of(index_cols, title_pieces, debug=False):    
+def _title_of(index_cols, title_pieces, debug=False):
     pieces_dict = dict(zip(index_cols, title_pieces))
     if debug:
         return "\n".join(map(str, pieces_dict.items()))
@@ -199,7 +199,9 @@ def _pp(df, ds, index_cols, fig, ax, debug=False):
     fig.show()
     for bp in bps:
         xtl = bp.xaxis.get_ticklabels()
-        xtl2 = [_fmt_tick_label(abs(_parse_tick_number_text(t.get_text()))) for t in xtl]
+        xtl2 = [
+            _fmt_tick_label(abs(_parse_tick_number_text(t.get_text()))) for t in xtl
+        ]
         bp.set_xticklabels(xtl2)
 
     return True
@@ -220,9 +222,42 @@ def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False):
 ## Data Processing
 
 
+def _parse_crosstab_sheet_values(sheet, country_knows_status_year):
+    if country_knows_status_year is None:
+        pass
+    else:
+        country, knows_status, year = country_knows_status_year
+        v = list(sheet.values)[2:]
+
+        table_of = v[0][0]
+        section_var_name, covariate = re.search(r"(\w+) by (\w+)", table_of).groups()
+        controlling_for = v[1][0]
+        m_dataset = re.search(r"dataset=([^ ]*)", controlling_for)
+        dataset = m_dataset.groups()[0]
+        m_pregnant_controlling = re.search(r"pregnant=(\w*)", controlling_for)
+        pregnant_controlling = (
+            m_pregnant_controlling.groups()[0].strip()
+            if m_pregnant_controlling is not None
+            else "N/A"
+        )
+        df_raw = pd.DataFrame(v[3:], columns=v[2])
+
+        return (
+            country,
+            knows_status,
+            year,
+            covariate,
+            dataset,
+            pregnant_controlling,
+            df_raw,
+        )
+
+
 def _crosstab_sheet_to_df(
-    sheet, section_var_name="domain", controlling_for_aside_from_dataset=None,
-    country_knows_status_year=None
+    sheet,
+    section_var_name="domain",
+    controlling_for_aside_from_dataset=None,
+    country_knows_status_year=None,
 ):
     """
         country_knows_status_year: a triple like (country, knows_status, year) or None
@@ -233,26 +268,20 @@ def _crosstab_sheet_to_df(
         None,
     ], "currently can only control for pregnant"
     assert section_var_name == "domain", "TODO: refactor. This is conceptually simpler"
-
     if country_knows_status_year is None:
         raise ValueError("not yet implemented")
 
-    country, knows_status, year = country_knows_status_year
-    out = []
-    v = list(sheet.values)[2:]
+    (
+        country,
+        knows_status,
+        year,
+        covariate,
+        dataset,
+        pregnant_controlling,
+        df_raw,
+    ) = _parse_crosstab_sheet_values(sheet, country_knows_status_year)
 
-    table_of = v[0][0]
-    section_var_name, covariate = re.search(r"(\w+) by (\w+)", table_of).groups()
-    controlling_for = v[1][0]
-    m_dataset = re.search(r"dataset=([^ ]*)", controlling_for)
-    dataset = m_dataset.groups()[0]
-    m_pregnant_controlling = re.search(r"pregnant=(\w*)", controlling_for)
-    pregnant_controlling = (
-        m_pregnant_controlling.groups()[0].strip()
-        if m_pregnant_controlling is not None
-        else "N/A"
-    )
-    df_raw = pd.DataFrame(v[3:], columns=v[2])
+    out = []
     section = None
     for _, row in df_raw.iterrows():
         rd = row.to_dict()
@@ -294,7 +323,9 @@ def wb_to_df(wb, index_cols, country_knows_status_year=None):
     for sn in wb.sheetnames:
         if "crosstab" in sn.lower():
             sheet = wb[sn]
-            df_sheet = _crosstab_sheet_to_df(sheet, country_knows_status_year=country_knows_status_year)
+            df_sheet = _crosstab_sheet_to_df(
+                sheet, country_knows_status_year=country_knows_status_year
+            )
             df_sheet_clean = _crosstab_df_clean(df_sheet, index_cols)
             df_sheet_clean["sheet_name"] = sn
             dfs_clean.append(df_sheet_clean)
@@ -313,10 +344,12 @@ def wb_to_df(wb, index_cols, country_knows_status_year=None):
         # dont care about them
         (~dfc.section.str.contains("HIV Negative")),
         ~(dfc.pregnant_controlling == "Yes"),
-
         # if covariate = pregnant, section contains women
         # = (section contains women or covariate != pregnant)
-        ((dfc.section.str.lower().str.contains("women")) | (dfc.covariate != "pregnant"))
+        (
+            (dfc.section.str.lower().str.contains("women"))
+            | (dfc.covariate != "pregnant")
+        ),
     ]
     mask = pd.concat(filters, axis=1).all(axis=1)
     return dfc[mask]
