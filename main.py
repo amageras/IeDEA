@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import openpyxl
+import os 
 
-from util import pp_grid, process_wb_df, prod, wb_to_df
+from util import pp_grid, process_wb_df, prod, wb_to_df, only
 
 DS = ["IeDEA", "DHS"]
 INDEX = [
@@ -50,7 +51,7 @@ def _get_supplemented_grid_order(
     return out
 
 
-def _df_wb_proc_to_charts(
+def _df_wb_proc_to_page(
     df_wb_proc,
     grid_shape,
     precedence,
@@ -68,6 +69,7 @@ def _df_wb_proc_to_charts(
         insert any missing years as blanks then sort by year
 
     """
+    assert len(df_wb_proc.groupby(["country", "knows_status"])) == 1
     fig, axes = plt.subplots(*grid_shape, figsize=figsize)
     axes = axes.reshape((1, prod(grid_shape)))
     df_wb_proc_idx = df_wb_proc.set_index(INDEX)
@@ -79,10 +81,14 @@ def _df_wb_proc_to_charts(
         lambda df: pp_grid(df, fig, axes[0], DS, INDEX, grid_order, debug=debug)
     )
     fig.tight_layout(pad=4)
-    return fig
+
+    page_cols = ["country", "knows_status"]
+    country_knows = df_wb_proc_idx.reset_index()[page_cols].loc[0]
+    page_metadata = dict(zip(page_cols, country_knows))
+    return fig, page_metadata
 
 
-def _xl_to_charts(args):
+def _xl_wb_to_pages(args):
     def __parse_cksy(cyks_raw):
         if cyks_raw:
             parts = [p.strip() for p in cyks_raw.split(",")]
@@ -94,7 +100,6 @@ def _xl_to_charts(args):
     wb = openpyxl.load_workbook(args.wb_path)
     country_knows_status_year = __parse_cksy(args.country_knows_status_year)
     df_wb = wb_to_df(wb, INDEX, country_knows_status_year=country_knows_status_year)
-
     value_cols = ["Row_Percent", "N", "sheet_name"]
     df_wb_proc = process_wb_df(df_wb, value_cols, DS, INDEX).reset_index(drop=True)
     precedence = [
@@ -114,20 +119,25 @@ def _xl_to_charts(args):
         "covariate",
         "pregnant_controlling",
     ]
-    n_rows = len(df_wb_proc.groupby(row_key_cols))
-    years = sorted(df_wb_proc["year"].unique().tolist())
-    grid_shape = (n_rows, len(years))
-    figsize = (20, 20)
+    figs = []
+    page_metadata = []
+    for _, page_df in df_wb_proc.groupby(["country", "knows_status"]):
+        n_rows = len(page_df.groupby(row_key_cols))
+        years = sorted(page_df["year"].unique().tolist())
+        grid_shape = (n_rows, len(years))
+        figsize = (20, 20)
 
-    fig = _df_wb_proc_to_charts(
-        df_wb_proc,
-        grid_shape,
-        precedence,
-        years,
-        figsize=figsize,
-        debug=args.debug,
-    )
-    return fig
+        fig, pm = _df_wb_proc_to_page(
+            page_df,
+            grid_shape,
+            precedence,
+            years,
+            figsize=figsize,
+            debug=args.debug,
+        )
+        figs.append(fig)
+        page_metadata.append(pm)
+    return figs, page_metadata
 
 
 def main():
@@ -149,9 +159,12 @@ def main():
     parser_save.add_argument("output_file", type=str, help="image file to write")
     _ = subparsers.add_parser("interactive", help="just plt.show()")
     args = parser.parse_args()
-    fig = _xl_to_charts(args)
+    out_file_name = os.path.splitext(args.output_file)[0]
+    figs, page_metadata = _xl_wb_to_pages(args)
     if args.sub_cmd == "save":
-        fig.savefig(args.output_file)
+        for fig, pm in zip(figs, page_metadata):
+            pmd_name = "_".join(pm.values())
+            fig.savefig(f"{out_file_name}_{pmd_name}.png")
     elif args.sub_cmd == "interactive":
         plt.show()
     else:
