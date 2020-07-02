@@ -45,7 +45,8 @@ def _get_supplemented_grid_order(pd_idx, index_cols, years, precedence):
         for yr in years:
             lst = list(tup_in[:year_idx]) + [yr] + list(tup_in[year_idx + 1:])
             out_unordered.append(tuple(lst))
-    out = list(sorted(out_unordered, key=__key))
+    dedup = list(set(out_unordered))
+    out = list(sorted(dedup, key=__key))
     return out
 
 
