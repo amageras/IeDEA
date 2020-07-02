@@ -13,13 +13,14 @@ from scipy.stats import t
 # SECTIONS
 
 
-## types
+# types
+
 
 class SASParseException(Exception):
     pass
 
 
-## General
+# General
 
 
 def prod(iterable):
@@ -27,9 +28,9 @@ def prod(iterable):
 
 
 def only(ser, lower_bound=0):
-    l = pd.Series(ser).unique().tolist()
-    assert lower_bound <= len(l) <= 1, l
-    res = l[0] if len(l) == 1 else None
+    lst = pd.Series(ser).unique().tolist()
+    assert lower_bound <= len(lst) <= 1, lst
+    res = lst[0] if len(lst) == 1 else None
     return res
 
 
@@ -199,14 +200,16 @@ def _pp(df, ds, index_cols, fig, ax, debug=False):
     ax.set_xlabel("Percent")
     ax.set_ylabel("Level")
     ax.set_title(_title_of(index_cols, title_pieces, debug=debug), fontsize=22)
-    ax.legend(handles=[Patch(facecolor=c, label=_ds) for _ds, c in zip(ds, colors)])
+    ax.legend(handles=[Patch(facecolor=c, label=_ds)
+                       for _ds, c in zip(ds, colors)])
 
     fig.canvas.draw()
     fig.show()
     for bp in bps:
         xtl = bp.xaxis.get_ticklabels()
         xtl2 = [
-            _fmt_tick_label(abs(_parse_tick_number_text(t.get_text()))) for t in xtl
+            _fmt_tick_label(abs(_parse_tick_number_text(t.get_text())))
+            for t in xtl
         ]
         bp.set_xticklabels(xtl2)
 
@@ -225,13 +228,14 @@ def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False):
     return _pp(grp, ds, index_cols, fig, ax, debug=debug)
 
 
-## Data Processing
+# Data Processing
 
 
 def _parse_crosstab_preproc(sheet, country_knows_status_year):
     v = list(sheet.values)
     if country_knows_status_year is None:
-        country, year, knows_status = [_v.strip() for _v in v[0][0].split()][:3]
+        country, year, knows_status = [_v.strip()
+                                       for _v in v[0][0].split()][:3]
         return country, knows_status, year, v[4:]
     else:
         country, knows_status, year = country_knows_status_year
@@ -245,8 +249,10 @@ def _parse_crosstab_sheet_values(sheet, country_knows_status_year):
     table_of = v[0][0]
     m_svnc = re.search(r"(\w+) by (\w+)", table_of)
     if m_svnc is None or len(m_svnc.groups()) != 2:
-        raise SASParseException("couldnt match section_var_name and covariate from crosstab sheet")
-    
+        raise SASParseException(
+            "couldnt match section_var_name and covariate from crosstab sheet"
+        )
+
     section_var_name, covariate = m_svnc.groups()
     controlling_for = v[1][0]
     m_dataset = re.search(r"dataset=([^ ]*)", controlling_for)
@@ -272,10 +278,13 @@ def _parse_crosstab_sheet_values(sheet, country_knows_status_year):
 
 
 def _crosstab_sheet_to_df(
-    sheet, controlling_for_aside_from_dataset=None, country_knows_status_year=None,
+    sheet,
+    controlling_for_aside_from_dataset=None,
+    country_knows_status_year=None,
 ):
     """
-        country_knows_status_year: a triple like (country, knows_status, year) or None
+        country_knows_status_year: a triple like
+          (country, knows_status, year) or None
           if tuple, like ("Burundi", "All", 2011)
     """
     assert controlling_for_aside_from_dataset in [
@@ -292,7 +301,9 @@ def _crosstab_sheet_to_df(
         pregnant_controlling,
         df_raw,
     ) = _parse_crosstab_sheet_values(sheet, country_knows_status_year)
-    assert section_var_name == "domain", f"TODO: refactor. This is conceptually simpler {section_var_name}"
+    assert (
+        section_var_name == "domain"
+    ), f"TODO: refactor. This is conceptually simpler {section_var_name}"
 
     out = []
     section = None
@@ -370,30 +381,38 @@ def wb_to_df(wb, index_cols, country_knows_status_year=None):
 
 def process_wb_df(df, values, ds, index_cols):
     df_piv = df.pivot_table(
-        index=index_cols + ["level"], columns=["dataset"], values=values, aggfunc=only
+        index=index_cols + ["level"],
+        columns=["dataset"],
+        values=values, aggfunc=only
     )
     df_piv.columns = ["_".join(col).strip() for col in df_piv.columns.values]
     df_dropped = df_piv.dropna(
         subset=[
-            f"{val}_{ds}" for val, ds in itertools.product(values, ["IeDEA", "DHS"])
+            f"{val}_{ds}" for val, ds in
+            itertools.product(values, ["IeDEA", "DHS"])
         ]
     )
 
     n_sum = (
-        df_dropped.reset_index().groupby(index_cols)[[f"N_{_ds}" for _ds in ds]].sum()
+        df_dropped.reset_index().groupby(index_cols)[
+            [f"N_{_ds}" for _ds in ds]].sum()
     )
     neq0 = (n_sum != 0).all(axis=1)
     neq0_idx = neq0[neq0].index
     df_dropped = (
-        df_dropped.reset_index().set_index(index_cols).loc[neq0_idx].reset_index()
+        df_dropped.reset_index().set_index(
+            index_cols).loc[neq0_idx].reset_index()
     )
 
     for _ds in ds:
-        df_dropped[f"proportion_{_ds}"] = df_dropped[f"Row_Percent_{_ds}"] / 100
+        df_dropped[f"proportion_{_ds}"] = (
+            df_dropped[f"Row_Percent_{_ds}"] / 100
+        )
 
     df_dropped["N_total"] = sum(df_dropped[f"N_{_ds}"] for _ds in ds)
     df_dropped["p_hat"] = (
-        sum(df_dropped[f"proportion_{_ds}"] * df_dropped[f"N_{_ds}"] for _ds in ds)
+        sum(df_dropped[f"proportion_{_ds}"] *
+            df_dropped[f"N_{_ds}"] for _ds in ds)
         / df_dropped["N_total"]
     )
 
@@ -416,8 +435,10 @@ def process_wb_df(df, values, ds, index_cols):
         2 * np.arcsin(np.sqrt(df_dropped["proportion_IeDEA"]))
     ) - (2 * np.arcsin(np.sqrt(df_dropped["proportion_DHS"])))
 
-    df_dropped["cohens_h_label"] = df_dropped["cohens_h"].apply(_cohens_h_label)
+    df_dropped["cohens_h_label"] = df_dropped["cohens_h"].apply(
+        _cohens_h_label)
     df_dropped["plot_label"] = df_dropped.apply(
-        lambda r: " ".join([r["cohens_h_label"], r["significance_label"]]), axis=1
+        (lambda r: " ".join([r["cohens_h_label"], r["significance_label"]])),
+        axis=1
     )
     return df_dropped
