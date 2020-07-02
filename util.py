@@ -244,7 +244,7 @@ def _parse_crosstab_sheet_values(sheet, country_knows_status_year):
     )
     table_of = v[0][0]
     m_svnc = re.search(r"(\w+) by (\w+)", table_of)
-    if m_svnc is None or len(m_svnc) != 2:
+    if m_svnc is None or len(m_svnc.groups()) != 2:
         raise SASParseException("couldnt match section_var_name and covariate from crosstab sheet")
     
     section_var_name, covariate = m_svnc.groups()
