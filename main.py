@@ -8,7 +8,7 @@ import numpy as np
 import openpyxl
 import os 
 
-from util import pp_grid, process_wb_df, prod, wb_to_df, only
+from util import pp_grid, process_wb_df, prod, wb_to_df, only, SASParseException
 
 DS = ["IeDEA", "DHS"]
 INDEX = [
@@ -160,17 +160,21 @@ def main():
     _ = subparsers.add_parser("interactive", help="just plt.show()")
     args = parser.parse_args()
     out_file_name = os.path.splitext(args.output_file)[0]
-    figs, page_metadata = _xl_wb_to_pages(args)
-    if args.sub_cmd == "save":
-        for fig, pm in zip(figs, page_metadata):
-            pmd_name = "_".join(pm.values())
-            fig.savefig(f"{out_file_name}_{pmd_name}.png")
-    elif args.sub_cmd == "interactive":
-        plt.show()
-    else:
-        sys.stderr.write(f"invalid sub_cmd: {args.sub_cmd}")
-        return 1
-    return 0
+    try:
+        figs, page_metadata = _xl_wb_to_pages(args)
+        if args.sub_cmd == "save":
+            for fig, pm in zip(figs, page_metadata):
+                pmd_name = "_".join(pm.values())
+                fig.savefig(f"{out_file_name}_{pmd_name}.png")
+        elif args.sub_cmd == "interactive":
+            plt.show()
+        else:
+            sys.stderr.write(f"invalid sub_cmd: {args.sub_cmd}")
+            return 1
+        return 0
+    except SASParseException as e:
+        sys.stderr.write(f"Failed: {str(e)}\n")
+        return 2
 
 
 if __name__ == "__main__":

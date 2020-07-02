@@ -13,6 +13,12 @@ from scipy.stats import t
 # SECTIONS
 
 
+## types
+
+class SASParseException(Exception):
+    pass
+
+
 ## General
 
 
@@ -237,7 +243,11 @@ def _parse_crosstab_sheet_values(sheet, country_knows_status_year):
         sheet, country_knows_status_year
     )
     table_of = v[0][0]
-    section_var_name, covariate = re.search(r"(\w+) by (\w+)", table_of).groups()
+    m_svnc = re.search(r"(\w+) by (\w+)", table_of)
+    if m_svnc is None or len(m_svnc) != 2:
+        raise SASParseException("couldnt match section_var_name and covariate from crosstab sheet")
+    
+    section_var_name, covariate = m_svnc.groups()
     controlling_for = v[1][0]
     m_dataset = re.search(r"dataset=([^ ]*)", controlling_for)
     dataset = m_dataset.groups()[0]
