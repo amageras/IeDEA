@@ -93,7 +93,7 @@ def _df_wb_proc_to_page(
             Patch(facecolor=c, label=_ds)
             for _ds, c in zip(DS, DS_COLORS)
         ],
-        loc="bottom center"
+        loc="lower center"
     )
     fig.tight_layout(pad=2)
 
