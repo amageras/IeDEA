@@ -173,6 +173,8 @@ def main():
     out_file_name = os.path.splitext(args.output_file)[0]
 
     mpl.rcParams['font.family'] = 'monospace'
+    plt.rc('xtick', labelsize=16)
+    plt.rc('ytick', labelsize=16)
 
     try:
         figs, page_metadata = _xl_wb_to_pages(args)

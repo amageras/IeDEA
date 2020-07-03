@@ -143,7 +143,15 @@ def _title_of(index_cols, title_pieces, debug=False):
     return f"{cov_display} ({dom_display}, {year})"
 
 
+def _clean_bar_tick_display(value):
+    return value.split()[0]
+
+
 def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
+    df_plot_filt = df_plot_filt.copy()
+    df_plot_filt["level"] = df_plot_filt["level"]\
+        .apply(_clean_bar_tick_display)
+
     order_of_bars = _order_cat(covariate, df_plot_filt["level"].unique())
     bps = []
     for _ds, c in zip(ds, colors):
@@ -201,9 +209,9 @@ def _pp(df, ds, index_cols, fig, ax, debug=False, ylabel=None):
 
     bps = _get_barplots(df_plot_filt, covariate, ds, colors, ax)
 
-    ax.set_xlabel("Percent")
+    ax.set_xlabel("Percent", fontsize=20)
     _ylabel = ylabel if ylabel is not None else covariate
-    ax.set_ylabel(_ylabel)
+    ax.set_ylabel(_ylabel, fontsize=20)
     ax.set_title(_title_of(index_cols, title_pieces, debug=debug), fontsize=22)
     ax.legend(handles=[Patch(facecolor=c, label=_ds)
                        for _ds, c in zip(ds, colors)])
