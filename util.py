@@ -169,9 +169,9 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
                 # print(p.get_y(), p.get_x(), p.get_height())
                 bp.text(
                     10,
-                    p.get_y() + 0.5,
+                    p.get_y() + p.get_height(),
                     vals["plot_label"],
-                    ha="center",
+                    ha="right",
                     color="black",
                     fontsize=20,
                 )
