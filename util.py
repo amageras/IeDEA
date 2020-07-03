@@ -181,7 +181,7 @@ def _get_axis_key(index, ordered_index):
         return -1
 
 
-def _pp(df, ds, index_cols, fig, ax, debug=False):
+def _pp(df, ds, index_cols, fig, ax, debug=False, ylabel=None):
     assert len(ds) == 2
     assert len(df.index.unique()) == 1, "pp: expected a unique index value"
     cov_lvl = index_cols.index("covariate")
@@ -198,7 +198,8 @@ def _pp(df, ds, index_cols, fig, ax, debug=False):
     bps = _get_barplots(df_plot_filt, covariate, ds, colors, ax)
 
     ax.set_xlabel("Percent")
-    ax.set_ylabel("Level")
+    _ylabel = ylabel if ylabel is not None else covariate
+    ax.set_ylabel(_ylabel)
     ax.set_title(_title_of(index_cols, title_pieces, debug=debug), fontsize=22)
     ax.legend(handles=[Patch(facecolor=c, label=_ds)
                        for _ds, c in zip(ds, colors)])
@@ -216,7 +217,8 @@ def _pp(df, ds, index_cols, fig, ax, debug=False):
     return True
 
 
-def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False):
+def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False,
+            ylabel=None):
     """
     grp: dataframe whose index is like `index` in `_get_axis_key()`
     axes: 1-d array in row-major order
@@ -225,7 +227,7 @@ def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False):
     """
     ax_key = _get_axis_key(grp.index, ordered_index)
     ax = axes[ax_key]
-    return _pp(grp, ds, index_cols, fig, ax, debug=debug)
+    return _pp(grp, ds, index_cols, fig, ax, debug=debug, ylabel=ylabel)
 
 
 # Data Processing

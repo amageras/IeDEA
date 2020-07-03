@@ -51,7 +51,13 @@ def _get_supplemented_grid_order(pd_idx, index_cols, years, precedence):
 
 
 def _df_wb_proc_to_page(
-    df_wb_proc, grid_shape, precedence, years, figsize=(20, 20), debug=False,
+    df_wb_proc,
+    grid_shape,
+    precedence,
+    years,
+    figsize=(20, 20),
+    debug=False,
+    ylabel=None,
 ):
     """
     rule:
@@ -74,7 +80,8 @@ def _df_wb_proc_to_page(
     )
     df_wb_proc_idx.groupby(INDEX).apply(
         lambda df: pp_grid(
-            df, fig, axes[0], DS, INDEX, grid_order, debug=debug)
+            df, fig, axes[0], DS, INDEX, grid_order, debug=debug, ylabel=ylabel
+        )
     )
     fig.tight_layout(pad=4)
 
@@ -132,6 +139,7 @@ def _xl_wb_to_pages(args):
             years,
             figsize=figsize,
             debug=args.debug,
+            ylabel=args.ylabel,
         )
         figs.append(fig)
         page_metadata.append(pm)
@@ -145,6 +153,7 @@ def main():
     parser.add_argument(
         "--debug", action="store_true",
     )
+    parser.add_argument("--ylabel", required=False, default="", type=str)
     parser.add_argument(
         "--country_knows_status_year",
         "--cksy",
