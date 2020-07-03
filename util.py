@@ -23,6 +23,10 @@ class SASParseException(Exception):
 # General
 
 
+def _pad(string, length):
+    return string + " " * max(0, length - len(string))
+
+
 def prod(iterable):
     return reduce(operator.mul, iterable, 1)
 
@@ -380,6 +384,12 @@ def wb_to_df(wb, index_cols, country_knows_status_year=None):
     return dfc[mask]
 
 
+def _get_padded_label(cohens_h_label, significance_label):
+    return _pad(
+        f"{cohens_h_label} {significance_label}", 5
+    )
+
+
 def process_wb_df(df, values, ds, index_cols):
     df_piv = df.pivot_table(
         index=index_cols + ["level"], columns=["dataset"], values=values,
@@ -437,7 +447,9 @@ def process_wb_df(df, values, ds, index_cols):
     df_dropped["cohens_h_label"] = df_dropped["cohens_h"].apply(
         _cohens_h_label)
     df_dropped["plot_label"] = df_dropped.apply(
-        (lambda r: " ".join([r["cohens_h_label"], r["significance_label"]])),
+        lambda r: _get_padded_label(
+            r["cohens_h_label"], r["significance_label"]
+        ),
         axis=1
     )
     return df_dropped

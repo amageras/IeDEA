@@ -2,6 +2,7 @@
 import argparse
 import sys
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import openpyxl
 import os
@@ -170,6 +171,9 @@ def main():
     _ = subparsers.add_parser("interactive", help="just plt.show()")
     args = parser.parse_args()
     out_file_name = os.path.splitext(args.output_file)[0]
+
+    mpl.rcParams['font.family'] = 'monospace'
+
     try:
         figs, page_metadata = _xl_wb_to_pages(args)
         if args.sub_cmd == "save":
