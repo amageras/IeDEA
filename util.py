@@ -7,7 +7,6 @@ from functools import reduce
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.patches import Patch
 from scipy.stats import t
 
 # SECTIONS
@@ -164,16 +163,10 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
             x=x_col, y="level", data=_df, order=order_of_bars, color=c, ax=ax
         )
         if sgn == 1:
-            for idx_vals, p in zip(_df.iterrows(), bp.patches):
-                _, vals = idx_vals
-                # print(p.get_y(), p.get_x(), p.get_height())
-                bp.text(
-                    10,
-                    p.get_y() + p.get_height(),
-                    vals["plot_label"],
-                    ha="right",
-                    color="black",
-                    fontsize=20,
+            for idx, val in _df.iterrows():
+                i = order_of_bars.index(val["level"])
+                ax.text(
+                    val[f"Row_Percent_{_ds}"] + 1, i + 0.1, val["plot_label"]
                 )
         bps.append(bp)
     return bps
@@ -193,7 +186,7 @@ def _get_axis_key(index, ordered_index):
         return -1
 
 
-def _pp(df, ds, index_cols, fig, ax, debug=False, ylabel=None):
+def _pp(df, ds, colors, index_cols, fig, ax, debug=False, ylabel=None):
     assert len(ds) == 2
     assert len(df.index.unique()) == 1, "pp: expected a unique index value"
     cov_lvl = index_cols.index("covariate")
@@ -205,16 +198,13 @@ def _pp(df, ds, index_cols, fig, ax, debug=False, ylabel=None):
     df_plot_filt = df[plot_mask]
     if len(df_plot_filt) == 0:
         return False
-    colors = ["gray", "lightgrey"]
 
     bps = _get_barplots(df_plot_filt, covariate, ds, colors, ax)
 
     ax.set_xlabel("Percent", fontsize=20)
     _ylabel = ylabel if ylabel is not None else covariate
     ax.set_ylabel(_ylabel, fontsize=20)
-    ax.set_title(_title_of(index_cols, title_pieces, debug=debug), fontsize=22)
-    ax.legend(handles=[Patch(facecolor=c, label=_ds)
-                       for _ds, c in zip(ds, colors)])
+    ax.set_title(_title_of(index_cols, title_pieces, debug=debug), fontsize=20)
 
     fig.canvas.draw()
     fig.show()
@@ -229,7 +219,7 @@ def _pp(df, ds, index_cols, fig, ax, debug=False, ylabel=None):
     return True
 
 
-def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False,
+def pp_grid(grp, fig, axes, ds, colors, index_cols, ordered_index, debug=False,
             ylabel=None):
     """
     grp: dataframe whose index is like `index` in `_get_axis_key()`
@@ -239,7 +229,9 @@ def pp_grid(grp, fig, axes, ds, index_cols, ordered_index, debug=False,
     """
     ax_key = _get_axis_key(grp.index, ordered_index)
     ax = axes[ax_key]
-    return _pp(grp, ds, index_cols, fig, ax, debug=debug, ylabel=ylabel)
+    return _pp(
+        grp, ds, colors, index_cols, fig, ax, debug=debug, ylabel=ylabel
+    )
 
 
 # Data Processing

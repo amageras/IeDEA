@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 import argparse
+import os
 import sys
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import openpyxl
-import os
+from matplotlib.patches import Patch
 
-from util import pp_grid, process_wb_df, prod, wb_to_df, SASParseException
+from util import SASParseException, pp_grid, process_wb_df, prod, wb_to_df
 
 DS = ["IeDEA", "DHS"]
+DS_COLORS = ["gray", "lightgrey"]
+
 INDEX = [
     "country",
     "knows_status",
@@ -64,7 +67,7 @@ def _df_wb_proc_to_page(
     rule:
       group and sort by country, then knows status (1 page per value)
         (order doesn't matter)
-      for each country and knows status, group and sort by domain, 
+      for each country and knows status, group and sort by domain,
       then covariate
         Men first, [agegrp, marital_status, bmigrp, pregnancy]
       for each page, domain, and covariate (i.e. for each row)
@@ -81,10 +84,18 @@ def _df_wb_proc_to_page(
     )
     df_wb_proc_idx.groupby(INDEX).apply(
         lambda df: pp_grid(
-            df, fig, axes[0], DS, INDEX, grid_order, debug=debug, ylabel=ylabel
+            df, fig, axes[0], DS, DS_COLORS, INDEX, grid_order, debug=debug,
+            ylabel=ylabel
         )
     )
-    fig.tight_layout(pad=4)
+    fig.legend(
+        handles=[
+            Patch(facecolor=c, label=_ds)
+            for _ds, c in zip(DS, DS_COLORS)
+        ],
+        loc="bottom center"
+    )
+    fig.tight_layout(pad=2)
 
     page_cols = ["country", "knows_status"]
     country_knows = df_wb_proc_idx.reset_index()[page_cols].loc[0]
