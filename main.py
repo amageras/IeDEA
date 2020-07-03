@@ -105,8 +105,8 @@ def _xl_wb_to_pages(args):
     df_wb = wb_to_df(
         wb, INDEX, country_knows_status_year=country_knows_status_year)
     value_cols = ["Row_Percent", "N", "sheet_name"]
-    df_wb_proc = process_wb_df(
-        df_wb, value_cols, DS, INDEX).reset_index(drop=True)
+    df_wb_proc = process_wb_df(df_wb, value_cols, DS, INDEX)\
+        .reset_index(drop=True)
     precedence = [
         "country",
         "knows_status",
@@ -124,6 +124,7 @@ def _xl_wb_to_pages(args):
         "covariate",
         "pregnant_controlling",
     ]
+
     figs = []
     page_metadata = []
     for _, page_df in df_wb_proc.groupby(["country", "knows_status"]):

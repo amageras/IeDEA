@@ -280,8 +280,7 @@ def _parse_crosstab_sheet_values(sheet, country_knows_status_year):
 
 
 def _crosstab_sheet_to_df(
-    sheet,
-    controlling_for_aside_from_dataset=None,
+    sheet, controlling_for_aside_from_dataset=None,
     country_knows_status_year=None,
 ):
     """
@@ -383,9 +382,8 @@ def wb_to_df(wb, index_cols, country_knows_status_year=None):
 
 def process_wb_df(df, values, ds, index_cols):
     df_piv = df.pivot_table(
-        index=index_cols + ["level"],
-        columns=["dataset"],
-        values=values, aggfunc=only
+        index=index_cols + ["level"], columns=["dataset"], values=values,
+        aggfunc=only
     )
     df_piv.columns = ["_".join(col).strip() for col in df_piv.columns.values]
     df_dropped = df_piv.dropna(
@@ -407,9 +405,8 @@ def process_wb_df(df, values, ds, index_cols):
     )
 
     for _ds in ds:
-        df_dropped[f"proportion_{_ds}"] = (
+        df_dropped[f"proportion_{_ds}"] = \
             df_dropped[f"Row_Percent_{_ds}"] / 100
-        )
 
     df_dropped["N_total"] = sum(df_dropped[f"N_{_ds}"] for _ds in ds)
     df_dropped["p_hat"] = (
