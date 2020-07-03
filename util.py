@@ -386,7 +386,7 @@ def wb_to_df(wb, index_cols, country_knows_status_year=None):
 
 def _get_padded_label(cohens_h_label, significance_label):
     return _pad(
-        f"{cohens_h_label} {significance_label}", 5
+        f"{cohens_h_label}{significance_label}", 5
     )
 
 
