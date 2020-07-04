@@ -183,7 +183,7 @@ def main():
     args = parser.parse_args()
     out_file_name = os.path.splitext(args.output_file)[0]
 
-    mpl.rcParams['font.family'] = 'monospace'
+    mpl.rcParams['font.family'] = 'Times New Roman'
     plt.rc('xtick', labelsize=16)
     plt.rc('ytick', labelsize=16)
 
