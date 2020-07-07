@@ -146,6 +146,17 @@ def _clean_bar_tick_display(value):
     return value.split()[0]
 
 
+def _get_bar_label_x(pct_value, sgn, l_text):
+    return 5 * sgn - 5
+    if sgn == 1:
+        if pct_value < 10:
+            return pct_value - 3
+        else:
+            return pct_value * 0.9
+    else:
+        return pct_value + 1
+
+
 def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
     df_plot_filt = df_plot_filt.copy()
     df_plot_filt["level"] = df_plot_filt["level"]\
@@ -162,12 +173,25 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
         bp = sns.barplot(
             x=x_col, y="level", data=_df, order=order_of_bars, color=c, ax=ax
         )
+
         if sgn == 1:
             for idx, val in _df.iterrows():
                 i = order_of_bars.index(val["level"])
+                value = val[f"Row_Percent_{_ds}"]
+                label = "20%" + (" " * 10) + val["plot_label"]
                 ax.text(
-                    val[f"Row_Percent_{_ds}"] + 1, i + 0.1, val["plot_label"]
+                    _get_bar_label_x(value, sgn, None), i + 0.1, label,
+                    fontsize=16
                 )
+        else:
+            for idx, val in _df.iterrows():
+                i = order_of_bars.index(val["level"])
+                value = val[f"Row_Percent_{_ds}"]
+                ax.text(
+                    _get_bar_label_x(value, sgn, None), i + 0.1, "20%",
+                    fontsize=16
+                )
+
         bps.append(bp)
     return bps
 
@@ -201,7 +225,7 @@ def _pp(df, ds, colors, index_cols, fig, ax, debug=False, ylabel=None):
 
     bps = _get_barplots(df_plot_filt, covariate, ds, colors, ax)
 
-    ax.set_xlabel("Percent", fontsize=20)
+    ax.set_xlabel("", fontsize=20)
     _ylabel = ylabel if ylabel is not None else covariate
     ax.set_ylabel(_ylabel, fontsize=20)
     ax.set_title(_title_of(index_cols, title_pieces, debug=debug), fontsize=20)
@@ -211,7 +235,8 @@ def _pp(df, ds, colors, index_cols, fig, ax, debug=False, ylabel=None):
     for bp in bps:
         xtl = bp.xaxis.get_ticklabels()
         xtl2 = [
-            _fmt_tick_label(abs(_parse_tick_number_text(t.get_text())))
+            ""
+            # _fmt_tick_label(abs(_parse_tick_number_text(t.get_text())))
             for t in xtl
         ]
         bp.set_xticklabels(xtl2)

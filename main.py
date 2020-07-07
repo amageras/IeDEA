@@ -88,14 +88,19 @@ def _df_wb_proc_to_page(
             ylabel=ylabel
         )
     )
-    fig.legend(
+    leg = fig.legend(
         handles=[
             Patch(facecolor=c, label=_ds)
             for _ds, c in zip(DS, DS_COLORS)
         ],
-        loc="lower center"
+        loc="lower right",
+        fontsize=24,
+        framealpha=1
     )
-    fig.tight_layout(pad=2)
+    for lh in leg.legendHandles:
+        lh.set_alpha(1)
+
+    fig.tight_layout(pad=1)
 
     page_cols = ["country", "knows_status"]
     country_knows = df_wb_proc_idx.reset_index()[page_cols].loc[0]
