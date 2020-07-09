@@ -182,7 +182,6 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
 
     order_of_bars = _order_cat(covariate, df_plot_filt["level"].unique())
 
-    # trans_data_inv = ax.transData.inverted()
     bps = []
     for _ds, c in zip(ds, colors):
         x_col = f"Row_Percent_{_ds}"
@@ -214,8 +213,8 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
                     _plot_label_x_tnsf,
                     i + 0.15,
                     label,
-                    # fontsize=16,
-                    fontdict={"size": 16, "family": "monospace", "weight": "bold"}
+                    fontdict={"size": 16,
+                              "family": "monospace", "weight": "bold"}
                 )
         else:
             for idx, val in _df.iterrows():
@@ -226,9 +225,9 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
                     _plot_label_x_tnsf,
                     i + 0.15,
                     label,
-                    # fontsize=16,
                     ha="right",
-                    fontdict={"size": 16, "family": "monospace", "weight": "bold"}
+                    fontdict={"size": 16,
+                              "family": "monospace", "weight": "bold"}
                 )
 
     return bps
@@ -246,6 +245,10 @@ def _get_axis_key(index, ordered_index):
     except ValueError:
         sys.stderr.write(f"{idx_value}\nNOT FOUND IN\n{ordered_list}\n")
         return -1
+
+
+def _get_formatted_tick_label(raw_tick_label):
+    return _fmt_tick_label(abs(_parse_tick_number_text(t.get_text())))
 
 
 def _pp(df, ds, colors, index_cols, fig, ax, debug=False, ylabel=None):
@@ -272,12 +275,7 @@ def _pp(df, ds, colors, index_cols, fig, ax, debug=False, ylabel=None):
     fig.show()
     for bp in bps:
         xtl = bp.xaxis.get_ticklabels()
-        # print("XTL\n", list(xtl))
-        xtl2 = [
-            ""
-            # _fmt_tick_label(abs(_parse_tick_number_text(t.get_text())))
-            for t in xtl
-        ]
+        xtl2 = [""] * len(xtl)
         bp.set_xticklabels(xtl2)
 
     return True
