@@ -112,7 +112,8 @@ def _ds_sign(ds, _ds, left="IeDEA"):
 
 def _parse_tick_number_text(t):
     sgn = 1
-    if t.startswith(chr(8722)):  # minus sign
+    # minus sign. '−'. NOT hyphen.
+    if t.startswith(chr(8722)):
         sgn = -1
         t = t[1:]
 
