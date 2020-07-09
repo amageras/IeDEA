@@ -11,7 +11,7 @@ from matplotlib.patches import Patch
 from util import SASParseException, pp_grid, process_wb_df, prod, wb_to_df
 
 DS = ["IeDEA", "DHS"]
-DS_COLORS = ["gray", "lightgrey"]
+DS_COLORS = ["darkgray", "lightgrey"]
 
 INDEX = [
     "country",

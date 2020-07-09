@@ -123,6 +123,11 @@ def _fmt_tick_label(x):
     return str(int(x))
 
 
+def _fmt_pct(pct_float):
+    int_s = str(int(round(pct_float, 0)))
+    return f"{int_s}%"
+
+
 def _title_of(index_cols, title_pieces, debug=False):
     pieces_dict = dict(zip(index_cols, title_pieces))
     if debug:
@@ -157,6 +162,19 @@ def _get_bar_label_x(pct_value, sgn, l_text):
         return pct_value + 1
 
 
+def _get_plot_label_x_axes_coords(sgn):
+    return 0.5 - sgn * 0.1
+
+
+def _pct_pad(pct):
+    if pct == 100:
+        return 0
+    elif pct >= 10:
+        return 1
+    else:
+        return 2
+
+
 def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
     df_plot_filt = df_plot_filt.copy()
     df_plot_filt["level"] = df_plot_filt["level"]\
@@ -165,7 +183,6 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
     order_of_bars = _order_cat(covariate, df_plot_filt["level"].unique())
 
     # trans_data_inv = ax.transData.inverted()
-    plot_label_x = [0.40, 0.55]
     bps = []
     for _ds, c in zip(ds, colors):
         x_col = f"Row_Percent_{_ds}"
@@ -180,34 +197,38 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
         bp.set_xlim((-max_abs_lim, max_abs_lim))
         bps.append(bp)
 
-    for _ds, bp, _plot_label_x in zip(ds, bps, plot_label_x):
-        # _plot_label_x_tnsf, _ = bp.transData.inverted().transform(
-        #     bp.transAxes.transform([_plot_label_x, 0])
-        # )
-        _plot_label_x_tnsf = -10 * sgn - 4
+    for _ds, bp in zip(ds, bps):
+        x_col = f"Row_Percent_{_ds}"
+        _plot_label_x_tnsf, _ = bp.transData.inverted().transform(
+            bp.transAxes.transform([_get_plot_label_x_axes_coords(sgn), 0])
+        )
+        _df = df_plot_filt[[x_col, "level", "plot_label"]]
         sgn = _ds_sign(ds, _ds)
         if sgn == 1:
             for idx, val in _df.iterrows():
+                pct = val[x_col]
                 i = order_of_bars.index(val["level"])
-                # value = val[f"Row_Percent_{_ds}"]
-                label = "20%" + (" " * 10) + val["plot_label"]
+                label = _fmt_pct(
+                    pct) + (" " * (10 + _pct_pad(pct))) + val["plot_label"]
                 bp.text(
                     _plot_label_x_tnsf,
-                    i + 0.1,
+                    i + 0.15,
                     label,
-                    fontsize=16,
-                    # transform=x_tr
+                    # fontsize=16,
+                    fontdict={"size": 16, "family": "monospace", "weight": "bold"}
                 )
         else:
             for idx, val in _df.iterrows():
                 i = order_of_bars.index(val["level"])
-                label = "20%"
+                pct = val[x_col]
+                label = _fmt_pct(pct)
                 bp.text(
                     _plot_label_x_tnsf,
-                    i + 0.1,
+                    i + 0.15,
                     label,
-                    fontsize=16,
-                    # transform=x_tr
+                    # fontsize=16,
+                    ha="right",
+                    fontdict={"size": 16, "family": "monospace", "weight": "bold"}
                 )
 
     return bps
