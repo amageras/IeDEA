@@ -190,7 +190,7 @@ def _pct_pad(pct):
         return 2
 
 
-def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
+def _get_barplots(df_plot_filt, covariate, ds, colors, label_space, ax):
     df_plot_filt = df_plot_filt.copy()
 
     order_of_bars = _order_cat(covariate, df_plot_filt["level"].unique())
@@ -220,8 +220,9 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
             for idx, val in _df.iterrows():
                 pct = val[x_col]
                 i = order_of_bars.index(val["level"])
-                label = _fmt_pct(
-                    pct) + (" " * (10 + _pct_pad(pct))) + val["plot_label"]
+                label = _fmt_pct(pct) + (
+                    " " * (label_space + _pct_pad(pct))
+                ) + val["plot_label"]
                 bp.text(
                     _plot_label_x_tnsf,
                     i + 0.15,
@@ -264,7 +265,8 @@ def _get_formatted_tick_label(raw_tick_label):
     return _fmt_tick_label(abs(_parse_tick_number_text(t.get_text())))
 
 
-def _pp(df, ds, colors, index_cols, fig, ax, debug=False, ylabel=None):
+def _pp(df, ds, colors, index_cols, fig, ax, debug=False, ylabel=None,
+        label_space=10):
     assert len(ds) == 2
     assert len(df.index.unique()) == 1, "pp: expected a unique index value"
     cov_lvl = index_cols.index("covariate")
@@ -277,7 +279,7 @@ def _pp(df, ds, colors, index_cols, fig, ax, debug=False, ylabel=None):
     if len(df_plot_filt) == 0:
         return False
 
-    bps = _get_barplots(df_plot_filt, covariate, ds, colors, ax)
+    bps = _get_barplots(df_plot_filt, covariate, ds, colors, label_space, ax)
 
     ax.set_xlabel("", fontsize=20)
     _ylabel = ylabel if ylabel is not None else covariate
@@ -295,7 +297,7 @@ def _pp(df, ds, colors, index_cols, fig, ax, debug=False, ylabel=None):
 
 
 def pp_grid(grp, fig, axes, ds, colors, index_cols, ordered_index, debug=False,
-            ylabel=None):
+            ylabel=None, label_space=10):
     """
     grp: dataframe whose index is like `index` in `_get_axis_key()`
     axes: 1-d array in row-major order
@@ -305,7 +307,8 @@ def pp_grid(grp, fig, axes, ds, colors, index_cols, ordered_index, debug=False,
     ax_key = _get_axis_key(grp.index, ordered_index)
     ax = axes[ax_key]
     return _pp(
-        grp, ds, colors, index_cols, fig, ax, debug=debug, ylabel=ylabel
+        grp, ds, colors, index_cols, fig, ax, debug=debug, ylabel=ylabel,
+        label_space=label_space
     )
 
 

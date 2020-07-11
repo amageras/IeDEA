@@ -62,6 +62,7 @@ def _df_wb_proc_to_page(
     figsize=(20, 20),
     debug=False,
     ylabel=None,
+    label_space=10,
 ):
     """
     rule:
@@ -85,7 +86,7 @@ def _df_wb_proc_to_page(
     df_wb_proc_idx.groupby(INDEX).apply(
         lambda df: pp_grid(
             df, fig, axes[0], DS, DS_COLORS, INDEX, grid_order, debug=debug,
-            ylabel=ylabel
+            ylabel=ylabel, label_space=label_space
         )
     )
     leg = fig.legend(
@@ -148,7 +149,7 @@ def _xl_wb_to_pages(args):
         n_rows = len(page_df.groupby(row_key_cols))
         years = sorted(page_df["year"].unique().tolist())
         grid_shape = (n_rows, len(years))
-        figsize = (20, 20)
+        figsize = (args.figwidth, 20)
 
         fig, pm = _df_wb_proc_to_page(
             page_df,
@@ -158,6 +159,7 @@ def _xl_wb_to_pages(args):
             figsize=figsize,
             debug=args.debug,
             ylabel=args.ylabel,
+            label_space=args.label_space
         )
         figs.append(fig)
         page_metadata.append(pm)
@@ -172,6 +174,8 @@ def main():
         "--debug", action="store_true",
     )
     parser.add_argument("--ylabel", required=False, default="", type=str)
+    parser.add_argument("--label_space", required=False, default=10, type=int)
+    parser.add_argument("--figwidth", required=False, default=20, type=int)
     parser.add_argument(
         "--country_knows_status_year",
         "--cksy",
