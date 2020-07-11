@@ -307,13 +307,20 @@ def pp_grid(grp, fig, axes, ds, colors, index_cols, ordered_index, debug=False,
     axes: 1-d array in row-major order
     ordered_index: ordered array of tuples where
         each element is an instance of INDEX
+
+    return: if plotting to the axis is successful, the key (index into array) for the axis.
+            Otherwise -1
     """
     ax_key = _get_axis_key(grp.index, ordered_index)
     ax = axes[ax_key]
-    return _pp(
+    res = _pp(
         grp, ds, colors, index_cols, fig, ax, debug=debug, ylabel=ylabel,
         label_space=label_space
     )
+    if res:
+        return ax_key
+    else:
+        return -1
 
 
 # Data Processing

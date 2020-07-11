@@ -84,12 +84,19 @@ def _df_wb_proc_to_page(
     grid_order = _get_supplemented_grid_order(
         df_wb_proc_idx.index, INDEX, years, precedence
     )
-    df_wb_proc_idx.groupby(INDEX).apply(
+    axis_list = axes[0]
+    s_done_axis_keys = df_wb_proc_idx.groupby(INDEX).apply(
         lambda df: pp_grid(
-            df, fig, axes[0], DS, DS_COLORS, INDEX, grid_order, debug=debug,
+            df, fig, axis_list, DS, DS_COLORS, INDEX, grid_order, debug=debug,
             ylabel=ylabel, label_space=label_space
         )
     )
+    done_axis_keys = set(s_done_axis_keys.unique())
+
+    for i in range(len(axis_list)):
+        if i not in done_axis_keys:
+            fig.delaxes(axis_list[i])
+
     if legend:
         leg = fig.legend(
             handles=[
