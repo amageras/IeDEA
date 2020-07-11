@@ -182,12 +182,16 @@ def _get_plot_label_x_axes_coords(sgn):
 
 
 def _pct_pad(pct):
-    if pct == 100:
-        return 0
-    elif pct >= 10:
-        return 1
+    if isinstance(pct, str):
+        pct = pct.strip("%")
+        return 3 - len(pct)
     else:
-        return 2
+        if pct == 100:
+            return 0
+        elif pct >= 10:
+            return 1
+        else:
+            return 2
 
 
 def _get_barplots(df_plot_filt, covariate, ds, colors, label_space, ax):
@@ -218,9 +222,9 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, label_space, ax):
         sgn = _ds_sign(ds, _ds)
         if sgn == 1:
             for idx, val in _df.iterrows():
-                pct = val[x_col]
+                pct = _fmt_pct(val[x_col])
                 i = order_of_bars.index(val["level"])
-                label = _fmt_pct(pct) + (
+                label = pct + (
                     " " * (label_space + _pct_pad(pct))
                 ) + val["plot_label"]
                 bp.text(
@@ -233,8 +237,8 @@ def _get_barplots(df_plot_filt, covariate, ds, colors, label_space, ax):
         else:
             for idx, val in _df.iterrows():
                 i = order_of_bars.index(val["level"])
-                pct = val[x_col]
-                label = _fmt_pct(pct)
+                pct = _fmt_pct(val[x_col])
+                label = pct
                 bp.text(
                     _plot_label_x_tnsf,
                     i + 0.15,
