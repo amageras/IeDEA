@@ -63,6 +63,7 @@ def _df_wb_proc_to_page(
     debug=False,
     ylabel=None,
     label_space=10,
+    legend=False,
 ):
     """
     rule:
@@ -89,17 +90,18 @@ def _df_wb_proc_to_page(
             ylabel=ylabel, label_space=label_space
         )
     )
-    leg = fig.legend(
-        handles=[
-            Patch(facecolor=c, label=_ds)
-            for _ds, c in zip(DS, DS_COLORS)
-        ],
-        loc="lower right",
-        fontsize=24,
-        framealpha=1
-    )
-    for lh in leg.legendHandles:
-        lh.set_alpha(1)
+    if legend:
+        leg = fig.legend(
+            handles=[
+                Patch(facecolor=c, label=_ds)
+                for _ds, c in zip(DS, DS_COLORS)
+            ],
+            loc="lower right",
+            fontsize=24,
+            framealpha=1
+        )
+        for lh in leg.legendHandles:
+            lh.set_alpha(1)
 
     fig.tight_layout(pad=1)
 
@@ -159,7 +161,8 @@ def _xl_wb_to_pages(args):
             figsize=figsize,
             debug=args.debug,
             ylabel=args.ylabel,
-            label_space=args.label_space
+            label_space=args.label_space,
+            legend=args.legend,
         )
         figs.append(fig)
         page_metadata.append(pm)
@@ -173,6 +176,7 @@ def main():
     parser.add_argument(
         "--debug", action="store_true",
     )
+    parser.add_argument("--legend", action="store_true")
     parser.add_argument("--ylabel", required=False, default="", type=str)
     parser.add_argument("--label_space", required=False, default=10, type=int)
     parser.add_argument("--figwidth", required=False, default=20, type=int)
