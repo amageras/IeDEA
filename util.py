@@ -12,6 +12,33 @@ from scipy.stats import t
 # SECTIONS
 
 
+# constants
+CAT_ORDERS = {
+    "bmigrp": [
+        "Underweight",
+        "Normal",
+        "Overweight",
+        "Obese",
+    ],
+    "agegrp": [
+        "15-19",
+        "20-24",
+        "25-29",
+        "30-34",
+        "35-39",
+        "40-44",
+        "45-49",
+        "50-54",
+        "55-59",
+    ],
+    "marital_status":  [
+        "Married",
+        "Divorced",
+        "Widowed",
+        "Single",
+    ]
+}
+
 # types
 
 
@@ -35,6 +62,12 @@ def only(ser, lower_bound=0):
     assert lower_bound <= len(lst) <= 1, lst
     res = lst[0] if len(lst) == 1 else None
     return res
+
+
+def _assert_one_to_one(s1, s2):
+    dct = dict(zip(s1, s2))
+    assert len(set(dct.keys())) == len(
+        set(dct.values())), f"1:1{s1},{s2},{dct}"
 
 
 # Stat
@@ -73,34 +106,15 @@ def _cohens_h_label(ch):
 
 
 def _order_cat(covariate, vals):
-    bmigrps_ordered = [
-        "Underweight",
-        "Normal Range",
-        "Overweight",
-        "Obese",
-    ]
-    agegrps_ordered = [
-        "15-19",
-        "20-24",
-        "25-29",
-        "30-34",
-        "35-39",
-        "40-44",
-        "45-49",
-        "50-54",
-        "55-59",
-    ]
-
     def __index_of(v, lst):
         for i, l in enumerate(lst):
             if l.lower() == v.lower():
                 return i
         return float("inf")
 
-    if covariate == "bmigrp":
-        return list(sorted(vals, key=lambda v: __index_of(v, bmigrps_ordered)))
-    elif covariate == "agegrp":
-        return list(sorted(vals, key=lambda v: __index_of(v, agegrps_ordered)))
+    if covariate in CAT_ORDERS:
+        ordered = CAT_ORDERS[covariate]
+        return list(sorted(vals, key=lambda v: __index_of(v, ordered)))
     else:
         return list(sorted(vals))
 
@@ -148,7 +162,7 @@ def _title_of(index_cols, title_pieces, debug=False):
     return f"{cov_display} ({dom_display}, {year})"
 
 
-def _clean_bar_tick_display(value):
+def _clean_levels(value):
     return value.split()[0]
 
 
@@ -178,8 +192,6 @@ def _pct_pad(pct):
 
 def _get_barplots(df_plot_filt, covariate, ds, colors, ax):
     df_plot_filt = df_plot_filt.copy()
-    df_plot_filt["level"] = df_plot_filt["level"]\
-        .apply(_clean_bar_tick_display)
 
     order_of_bars = _order_cat(covariate, df_plot_filt["level"].unique())
 
@@ -403,6 +415,9 @@ def _crosstab_df_clean(df_crosstab, index_cols):
 
     df_out = pd.DataFrame(df_crosstab)
     df_out["N"] = df_crosstab.apply(lambda r: Ns[r["section"]], axis=1)
+    _cleaned_levels = df_out["level"].apply(_clean_levels)
+    _assert_one_to_one(df_out["level"], _cleaned_levels)
+    df_out["level"] = _cleaned_levels
     return (
         df_crosstab[["dataset"] + index_cols + ["level", "Row\nPercent", "N"]]
         .rename(columns={"Row\nPercent": "Row_Percent"})
