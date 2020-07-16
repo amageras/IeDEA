@@ -21,4 +21,3 @@ This should work on `stable`:
 * fix bug on interactive subcommand
 * get png dimensions from user, rather than system display settings. It turns out that it comes out wider when using a 4k display rather than a 15" MBP Retina screen.
 * Better legend positioning
-* Remove empty plots
